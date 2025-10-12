@@ -1,7 +1,8 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 
 export default function Layout() {
+    const navigate = useNavigate()
     const [activeItem, setActiveItem] = useState("presence");
 
     const menuSections = [
@@ -56,7 +57,7 @@ export default function Layout() {
                     icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/approval"><path id="Fill 1" fill-rule="evenodd" clip-rule="evenodd" d="M11.6505 16.9027L7.12951 12.715L8.61414 11.1118L11.5296 13.8111L16.2144 8.73324L17.8199 10.2155L11.6505 16.9027ZM12 2C6.4773 2 2 6.4779 2 12.0004C2 17.5229 6.4773 22 12 22C17.5227 22 22 17.5229 22 12.0004C22 6.4779 17.5227 2 12 2Z" fill="currentColor"></path></g></svg>,
                 },
                 {
-                    id: "Disponibilités",
+                    id: "disponibilites",
                     label: "Disponibilités",
                     icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="e-h/entitlement"><path id="Vector" d="M20.1232 18.9787H15.4721C15.4419 18.9787 15.4174 18.9522 15.4174 18.9198V6.65566C15.4174 6.62298 15.4419 6.59677 15.4721 6.59677H20.1232C20.1534 6.59677 20.1779 6.62298 20.1779 6.65566V18.9198C20.1779 18.9522 20.1534 18.9787 20.1232 18.9787ZM14.1399 18.9787H9.48884C9.45862 18.9787 9.43409 18.9471 9.43409 18.9079V4.07081C9.43409 4.03166 9.45862 4 9.48884 4H14.1399C14.1701 4 14.1946 4.03166 14.1946 4.07081V18.9079C14.1946 18.9471 14.1701 18.9787 14.1399 18.9787ZM8.17258 18.9787H3.52155C3.51433 18.9787 3.50718 18.9774 3.50052 18.9747C3.49385 18.972 3.4878 18.9682 3.48271 18.9632C3.47762 18.9583 3.47359 18.9525 3.47086 18.9461C3.46813 18.9397 3.46675 18.9329 3.4668 18.926V8.72681C3.4668 8.69787 3.49133 8.67438 3.52155 8.67438H8.17258C8.2028 8.67438 8.22733 8.69787 8.22733 8.72681V18.926C8.22738 18.9329 8.226 18.9397 8.22327 18.9461C8.22053 18.9525 8.21651 18.9583 8.21142 18.9632C8.20633 18.9682 8.20028 18.972 8.19361 18.9747C8.18695 18.9774 8.1798 18.9787 8.17258 18.9787Z" fill="currentColor"></path></g></svg>,
                 },
@@ -125,7 +126,10 @@ export default function Layout() {
                                 {section.items.map((item) => (
                                     <li
                                         key={item.id}
-                                        onClick={() => setActiveItem(item.id)}
+                                        onClick={() => {
+                                            setActiveItem(item.id)
+                                            navigate(`/dashboard/${item.id}`)
+                                        }}
                                         className={`flex items-center space-x-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${activeItem === item.id
                                             ? "bg-emerald-100 text-[#27a082] font-semibold"
                                             : "text-gray-500 hover:bg-emerald-50 hover:text-[#27a082]"
