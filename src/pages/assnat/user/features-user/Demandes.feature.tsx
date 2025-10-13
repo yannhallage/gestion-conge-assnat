@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import { ClipLoader } from "react-spinners";
+// import { AlertTrianglet } from "lucide-react";
+import Modal from "react-modal";
+import { Tooltip } from 'react-tooltip'
+import { ClipLoader } from "react-spinners"
+// import { motion, AnimatePresence } from "framer-motion";
+import { ConfirmModal } from "../../../../components/modal-component";
 import { motion } from "framer-motion";
-
 
 const DemandesFeature = () => {
     const [loading, setLoading] = useState(true);
@@ -28,8 +32,13 @@ const DemandesFeature = () => {
     return (
         <div className="h-full flex flex-col bg-white">
             <header className="border-b border-gray-200 px-5 py-3">
-                <h1 className="text-xl text-gray-800">Demandes</h1>
+                <h1 className="text-xl text-gray-800">Mes demandes</h1>
             </header>
+            <div className="">
+                <div className="">
+                    {/* <MesDemandes /> */}
+                </div>
+            </div>
             <div className="">
                 <AucuneDemande />
             </div>
@@ -68,3 +77,185 @@ const AucuneDemande = () => {
         </motion.div>
     );
 };
+
+
+
+export function MesDemandes() {
+    const [isOpenDelete, setIsOpenDelete] = useState(false);
+    const [isOpenDownload, setIsOpenDownload] = useState(false);
+    const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);
+    const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);
+    return (
+        <div className="p-6 font-sans text-gray-800">
+            {/* Filtres */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+                <input
+                    type="text"
+                    placeholder="Recherche de demande"
+                    className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
+                />
+
+                <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 gap-2 text-sm text-gray-700 rounded border-[#ccc] px-3 py-2">
+                    <span className="text-gray-500 "><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/date"><g id="Frame 4"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M8 3H6V5H5.11765C3.9481 5 3 5.95513 3 7.13333V18.8667C3 20.0449 3.9481 21 5.11765 21H18.8824C20.0519 21 21 20.0449 21 18.8667V7.13333C21 5.95513 20.0519 5 18.8824 5H18V3H16V5H8V3ZM5.11765 18.8667L5.11765 11H18.8824V18.8667H5.11765ZM7 16V14H9V16H7ZM11 14H13V16H11V14Z" fill="currentColor"></path></g></g></svg></span>
+                    <span>Date: Tous</span>
+                </button>
+
+                <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 rounded  gap-2 text-sm text-gray-700 border-[#ccc] px-3 py-2">
+                    <span className="text-gray-500"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="r-u/status"><path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M12 22.5C17.799 22.5 22.5 17.799 22.5 12C22.5 6.20101 17.799 1.5 12 1.5C6.20101 1.5 1.5 6.20101 1.5 12C1.5 17.799 6.20101 22.5 12 22.5ZM17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12ZM19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" fill="currentColor"></path></g></svg></span>
+                    <span>Statut: Quelconque</span>
+                </button>
+
+                <button className="flex items-center gap-2 bg-[#f6f7f9] text-sm hover:bg-gray-50 rounded text-gray-700 border-[#ccc] px-3 py-2">
+                    <span className="text-gray-500"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="m-q/palm"><g id="palm"><path id="Vector" d="M18.7303 10.5533C17.8577 9.6315 16.7769 9.27469 15.7654 9.18548L18.1254 8.46194L18.5221 7.45097L19.1964 8.18442L20.5449 7.61946C20.5449 7.61946 19.5434 4.82441 16.291 5.46866C15.2895 5.66689 14.5656 6.13273 14.0599 6.68778C13.9508 5.91468 13.6236 5.11185 12.9096 4.34866C10.5992 1.87078 8.22932 3.56565 8.22932 3.56565L9.01268 4.83432L9.96461 4.63609L9.73654 5.69663L11.3132 7.76814C10.391 7.12389 9.13167 6.73734 7.48562 7.27256C4.82814 8.15468 3.86629 10.5434 3.90596 11.4057L5.25453 11.2669L5.75033 10.4542L6.19654 11.0885L7.98142 10.9795L8.51688 9.94867L8.92343 10.7912L11.6999 10.3848C10.6091 11.6733 9.41923 13.7745 9.3994 16.7975C9.42915 16.7876 9.45889 16.7876 9.49856 16.7777C9.8952 16.7182 10.3018 16.6885 10.7083 16.6885C11.2636 16.6885 11.809 16.748 12.3444 16.857C12.3742 16.8669 12.394 16.8669 12.4238 16.8768C12.3048 15.3901 12.4733 12.6446 13.6038 10.6524L16.172 13.1402L16.9554 12.8726L16.9355 13.8637L18.3733 15.0729L19.0675 14.7855L18.9286 15.6974L20.0491 16.6885C20.7532 15.1225 21.0903 13.0312 18.7303 10.5533Z" fill="currentColor"></path><path id="Vector_2" d="M10.6982 17.2432C10.3115 17.2432 9.9347 17.2729 9.56781 17.3324C7.23756 17.6892 5.34361 19.1164 4.58008 20.9996H16.8164C16.1024 19.2255 14.377 17.8577 12.2352 17.4017C11.7493 17.2927 11.2337 17.2432 10.6982 17.2432Z" fill="currentColor"></path></g></g></svg></span>
+                    <span>Type d'absence: Quelconque</span>
+                </button>
+            </div>
+
+            <div className="overflow-hidden shadow-sm bg-white">
+                <table className="w-full text-sm text-gray-800">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th className="text-left py-2.5 px-4 text-[13px] font-medium text-gray-600 tracking-wide">
+                                TYPE D'ABSENCE
+                            </th>
+                            <th className="text-left py-2.5 px-4 text-[13px] font-medium text-gray-600 tracking-wide">
+                                STATUT
+                            </th>
+                            <th className="text-left py-2.5 px-4 text-[13px] font-medium text-gray-600 tracking-wide">
+                                PÉRIODE D'ABSENCE
+                            </th>
+                            <th className="text-left py-2.5 px-4 text-[13px] font-medium text-gray-600 tracking-wide">
+                                DEMANDÉ
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr className="group border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 text-[14px] text-gray-800">Annual leave</td>
+
+                            <td className="py-3 px-4">
+                                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-medium px-2 py-0.5 rounded-md">
+                                    APPROUVÉ
+                                </span>
+                            </td>
+
+                            <td className="py-3 px-4 text-[14px] text-gray-800">
+                                13/10/2025 - 16/10/2025
+                            </td>
+
+                            <td className="py-3 px-4 text-[14px] text-gray-800 flex items-center justify-between">
+                                <span>4j</span>
+
+                                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-500">
+                                    <button
+                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="delete" data-tooltip-content="Supprimer"
+                                        onClick={() => setIsOpenDelete(true)}
+                                    >
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-hrs1113"><g id="r-u/trash"><g id="Union"><path d="M15 3H9V4H4V6H20V4H15V3Z" fill="currentColor"></path><path d="M5 7H19V19C19 20.1046 18.1046 21 17 21H7C5.89545 21 5 20.1046 5 19V7Z" fill="currentColor"></path></g></g></svg>
+                                        <Tooltip id="delete" />
+                                    </button>
+                                    <button
+                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="download" data-tooltip-content="Télécharger le PDF"
+                                        onClick={() => setIsOpenDownload(true)}
+                                    >
+                                        <svg
+                                            width="20"
+                                            height="20"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                clipRule="evenodd"
+                                                d="M16.8525 3H3V21H21V7.167L16.8525 3ZM12.018 18.4545L7.7775 14.214H10.215V8.7855H13.7145V14.214H16.2585L12.018 18.4545ZM15.6435 8.214V4.203L19.6305 8.214H15.6435Z"
+                                                fill="currentColor"
+                                            />
+                                        </svg>
+                                        <Tooltip id="download" />
+                                    </button>
+
+                                    {/* Icône Annuler */}
+                                    <button title=""
+                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="cancel" data-tooltip-content="Annuler la demande"
+                                        onClick={() => setIsOpenAnuler(true)}
+                                    >
+                                        <svg
+                                            width="20"
+                                            height="20"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                clipRule="evenodd"
+                                                d="M5.7 5.7L5.7 18.3H19.2V21L5.7 21H3L3 18.3V5.7V3H5.7H19.2V5.7H5.7ZM16.5 10.65H10.2V13.35H16.5V10.65ZM21 12L16.5 7.95001V16.05L21 12Z"
+                                                fill="currentColor"
+                                            />
+                                        </svg>
+                                        <Tooltip id="cancel" />
+                                    </button>
+                                    <button
+                                        data-tooltip-id="cancel" data-tooltip-content="Révoquer" className="hover:text-[#27a082] cursor-pointer"
+                                        onClick={() => setIsOpenRevoquer(true)}
+                                    >
+                                        <svg
+                                            width="20"
+                                            height="20"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                clipRule="evenodd"
+                                                d="M11.1579 12.9474C11.1579 11.5906 11.4558 10.2444 12.1912 9.27686C12.8593 8.39776 14.0781 7.57895 16.5263 7.57895H21V4H16.5263C13.1587 4 10.7986 5.19434 9.34173 7.1113C7.95205 8.93983 7.57895 11.1726 7.57895 12.9474V14.7368H4L9.36842 21L14.7368 14.7368H11.1579V12.9474Z"
+                                                fill="currentColor"
+                                            />
+                                        </svg>
+                                        <Tooltip id="Révoquer" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <ConfirmModal
+                    isOpen={isOpenRevoquer}
+                    title="Révocation de la demande"
+                    description="Souhaites-tu annuler la demande : admin orathsa - Annual leave?."
+                    cancelText="Annuler"
+                    confirm={() => setIsOpenRevoquer(false)}
+                    cancel={() => { setIsOpenRevoquer(false)}}
+                    confirmText="Confirmer"
+                />
+                <ConfirmModal
+                    isOpen={isOpenDeleteAnuler}
+                    title="Révocation"
+                    description="Es-tu sûr de vouloir retirer ta Demandes : admin orathsa - Annual leave?."
+                    cancelText="Annuler"
+                    confirm={() => setIsOpenAnuler(false)}
+                    cancel={() => { setIsOpenAnuler(false)}}
+                    confirmText="Confirmer"
+                />
+                <ConfirmModal
+                    isOpen={isOpenDelete}
+                    title="Suppression de la demande"
+                    description="Es-tu sûr de vouloir supprimer la demande : admin orathsa - Annual leave? Une fois supprimée, il sera impossible de restaurer la demande."
+                    cancelText="Annuler"
+                    confirm={() => setIsOpenDelete(false)}
+                    cancel={() => { setIsOpenDelete(false)}}
+                    confirmText="Confirmer"
+                />
+            </div>
+        </div>
+    );
+}
+
+// const [isOpenDelete, setIsOpenDelete] = useState(false);
+// const [isOpenDownload, setIsOpenDownload] = useState(false);
+// const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);
+// const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);

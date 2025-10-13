@@ -20,13 +20,8 @@ function App() {
       </Helmet>
 
       <Routes>
-        {/* Redirection par défaut */}
         <Route path="/" element={<Navigate to="/login-assnat" replace />} />
-
-        {/* Page de connexion */}
         <Route path="/login-assnat" element={<LoginAssnat />} />
-
-        {/* Layout principal */}
         <Route
           path="/dashboard"
           element={
@@ -35,24 +30,6 @@ function App() {
             </Layout>
           }
         />
-
-        {/* Routes enfants du dashboard */}
-        {/* <Route
-                    path="/dashboard/horloge"
-                    element={
-                        <Layout>
-                            <Horloge />
-                        </Layout>
-                    }
-                /> */}
-        {/* <Route
-                    path="/dashboard/presence"
-                    element={
-                        <Layout>
-                            <Presence />
-                        </Layout>
-                    }
-                /> */}
         <Route
           path="/dashboard/demandes"
           element={
