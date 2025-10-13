@@ -16,18 +16,6 @@ const RapportFeature = () => {
         { label: "ANOMALIES", icon: "https://img.icons8.com/ios/50/error.png" },
         { label: "LISTE DE PRÉSENCE", icon: "https://img.icons8.com/ios/50/task.png" },
         { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
-        { label: "PROJETS", icon: "https://img.icons8.com/ios/50/opened-folder.png" },
     ];
 
     return (

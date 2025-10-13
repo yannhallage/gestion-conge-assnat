@@ -1,4 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
+
 import { Plus } from 'lucide-react';
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
@@ -16,10 +18,11 @@ import {
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useState, useEffect } from "react";
+// import CustomModal from "../../../../components/assnat/user/CustomModal";
 
 const DemanderFeature = () => {
     const [loading, setLoading] = useState(true);
-
+    
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 700);
         return () => clearTimeout(timer);
@@ -58,7 +61,7 @@ export default DemanderFeature;
 function CongeCalendar() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
-
+    // const [isModalOpen, setIsModalOpen] = useState(false);
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
@@ -223,9 +226,19 @@ function CongeCalendar() {
                         />
                     </div>
                 </div>
-                <button className="bg-[#279c83] hover:bg-emerald-700 text-white py-2 cursor-pointer px-4 w-14">
+                <button className="bg-[#279c83] hover:bg-emerald-700 text-white py-2 cursor-pointer px-4 w-14"
+                    onClick={() => toast.success("Enregistré avec succès !")}
+                >
                     OK
                 </button>
+
+                {/* <CustomModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    title="Informations"
+                >
+                    <p>Ceci est un modal réutilisable 🎉</p>
+                </CustomModal> */}
             </div>
         </motion.div>
     );
