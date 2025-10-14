@@ -22,6 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login-assnat" replace />} />
         <Route path="/login-assnat" element={<LoginAssnat />} />
+
         <Route
           path="/dashboard"
           element={
@@ -30,6 +31,7 @@ function App() {
             </Layout>
           }
         />
+
         <Route
           path="/dashboard/demandes"
           element={
@@ -38,62 +40,69 @@ function App() {
             </Layout>
           }
         />
+
         <Route
-                    path="/dashboard/demander"
-                    element={
-                        <Layout>
-                        <DemanderFeature />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path="/dashboard/calendrier"
-                    element={
-                        <Layout>
-                        <CalendarFeature />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path="/dashboard/approbations"
-                    element={
-                        <Layout>
-                        <ApprobationFeature />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path="/dashboard/disponibilites"
-                    element={
-                        <Layout>
-                        <DisponibilitesFeature />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path="/dashboard/historique"
-                    element={
-                        <Layout>
-                        <HistoriquesFeature />
-                        </Layout>
-                    }
-                />
-                {/* <Route
-                    path="/dashboard/interaction"
-                    element={
-                        <Layout>
-                            <InteractionRH />
-                        </Layout>
-                    }
-                /> */}
-                <Route
-                    path="/dashboard/rapport"
-                    element={
-                        <Layout>
-                        <RapportFeature />
-                        </Layout>
-                    }
-                />
+          path="/dashboard/demander"
+          element={
+            <Layout>
+              <DemanderFeature />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/dashboard/calendrier"
+          element={
+            <Layout>
+              <CalendarFeature />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/dashboard/approbations"
+          element={
+            <Layout>
+              <ApprobationFeature />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/dashboard/disponibilites"
+          element={
+            <Layout>
+              <DisponibilitesFeature />
+            </Layout>
+          }
+        />
+
+        <Route
+          path="/dashboard/historique"
+          element={
+            <Layout>
+              <HistoriquesFeature />
+            </Layout>
+          }
+        />
+
+        {/* <Route
+          path="/dashboard/interaction"
+          element={
+            <Layout>
+              <InteractionRH />
+            </Layout>
+          }
+        /> */}
+
+        <Route
+          path="/dashboard/rapport"
+          element={
+            <Layout>
+              <RapportFeature />
+            </Layout>
+          }
+        />
       </Routes>
     </Router>
   );
