@@ -10,6 +10,7 @@ import { Route } from "react-router-dom";
 // import DisponibilitesFeature from "./pages/assnat/user/features-user/Disponibilité.feature";
 // import CalendarFeature from "./pages/assnat/user/features-user/Calendar.feature";
 // import RapportFeature from "./pages/assnat/user/features-user/Rapport.feature";
+
 import Layout from "../layout/Layout"
 import Presence from "../pages/assnat/user/Presence";
 import DemandesFeature from "../pages/assnat/user/features-user/Demandes.feature";
@@ -29,6 +30,7 @@ import DemanderFeatureAdmin from "../pages/assnat/admin/features-admin/Demander.
 import DisponibilitesFeatureAdmin from "../pages/assnat/admin/features-admin/Disponibilité.feature";
 import CalendarFeatureAdmin from "../pages/assnat/admin/features-admin/Calendar.feature";
 import RapportFeatureAdmin from "../pages/assnat/admin/features-admin/Rapport.feature";
+import AjouterPersonnel from "../pages/assnat/admin/features-admin/AjouterPersonnel.feature";
 
 
 
@@ -61,6 +63,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
                 <Route path={`${base}/disponibilites`} element={<Layout><DisponibilitesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/historique`} element={<Layout><HistoriquesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/rapport`} element={<Layout><RapportFeatureAdmin /></Layout>} />
+                <Route path={`${base}/personne`} element={<Layout><AjouterPersonnel /></Layout>} />
             </>
         );
     }
