@@ -30,11 +30,17 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 <Modal
                     isOpen={isOpen}
                     onRequestClose={cancel}
-                    overlayClassName="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-                    className="bg-white p-6 w-[400px] mx-2 shadow-lg outline-none"
+                    overlayClassName="fixed inset-0 bg-black/40 flex items-center justify-center z-50 transition-opacity duration-300"
+                    className="outline-none"
                     closeTimeoutMS={300}
                 >
-                    <motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                        animate={{ opacity: 1, scale: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.90, x: 20 }}
+                        transition={{ duration: 0.1, ease: "easeOut" }}
+                        className="bg-white p-6 w-[400px] mx-2 shadow-lg rounded-lg"
+                    >
                         <div className="flex flex-col items-center text-center">
                             <div className="bg-yellow-100 text-yellow-500 p-3 rounded-full mb-3">
                                 <AlertTriangle size={30} />
@@ -59,6 +65,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         </div>
                     </motion.div>
                 </Modal>
+
             )}
         </AnimatePresence>
     );

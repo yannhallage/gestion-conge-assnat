@@ -10,7 +10,7 @@ import { ConfirmModal } from "../../../../components/modal-component";
 import Drawer from "../../../../components/drawer";
 // import { Offcanvas } from "../../../../components/offCanvas"
 
-const DemandesFeature = () => {
+const DemandesFeatureAdmin = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -50,7 +50,7 @@ const DemandesFeature = () => {
     );
 };
 
-export default DemandesFeature;
+export default DemandesFeatureAdmin;
 
 // const AucuneDemande = () => {
 //     return (
@@ -84,7 +84,7 @@ export default DemandesFeature;
 
 
 
-function MesDemandes() {
+export function MesDemandes() {
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDownload, setIsOpenDownload] = useState(false);
     const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);

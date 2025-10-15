@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 export default function Layout() {
     const navigate = useNavigate()
-    const [activeItem, setActiveItem] = useState("presence");
-
+    const [activeItem, setActiveItem] = useState("horloge");
+    const [DomaineName, setDomaineName] = useState('admin');
     const menuSections = [
         {
             title: "Présence",
@@ -61,11 +62,6 @@ export default function Layout() {
                     label: "Disponibilités",
                     icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><g id="e-h/entitlement"><path id="Vector" d="M20.1232 18.9787H15.4721C15.4419 18.9787 15.4174 18.9522 15.4174 18.9198V6.65566C15.4174 6.62298 15.4419 6.59677 15.4721 6.59677H20.1232C20.1534 6.59677 20.1779 6.62298 20.1779 6.65566V18.9198C20.1779 18.9522 20.1534 18.9787 20.1232 18.9787ZM14.1399 18.9787H9.48884C9.45862 18.9787 9.43409 18.9471 9.43409 18.9079V4.07081C9.43409 4.03166 9.45862 4 9.48884 4H14.1399C14.1701 4 14.1946 4.03166 14.1946 4.07081V18.9079C14.1946 18.9471 14.1701 18.9787 14.1399 18.9787ZM8.17258 18.9787H3.52155C3.51433 18.9787 3.50718 18.9774 3.50052 18.9747C3.49385 18.972 3.4878 18.9682 3.48271 18.9632C3.47762 18.9583 3.47359 18.9525 3.47086 18.9461C3.46813 18.9397 3.46675 18.9329 3.4668 18.926V8.72681C3.4668 8.69787 3.49133 8.67438 3.52155 8.67438H8.17258C8.2028 8.67438 8.22733 8.69787 8.22733 8.72681V18.926C8.22738 18.9329 8.226 18.9397 8.22327 18.9461C8.22053 18.9525 8.21651 18.9583 8.21142 18.9632C8.20633 18.9682 8.20028 18.972 8.19361 18.9747C8.18695 18.9774 8.1798 18.9787 8.17258 18.9787Z" fill="currentColor"></path></g></svg>,
                 },
-            ],
-        },
-        {
-            title: "Congigurations",
-            items: [
                 {
                     id: "historique", label: "Historique", icon: <svg
                         width="24"
@@ -91,6 +87,11 @@ export default function Layout() {
                         </g>
                     </svg>
                 },
+            ],
+        },
+        {
+            title: "Congigurations",
+            items: [
                 {
                     id: "interaction",
                     label: "Interaction RH",
@@ -104,6 +105,36 @@ export default function Layout() {
             ],
         },
     ];
+
+
+    if (DomaineName === 'admin') {
+        menuSections[1].items.push({
+            id: "approbations",
+            label: "Approbations",
+            icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/approval"><path id="Fill 1" fill-rule="evenodd" clip-rule="evenodd" d="M11.6505 16.9027L7.12951 12.715L8.61414 11.1118L11.5296 13.8111L16.2144 8.73324L17.8199 10.2155L11.6505 16.9027ZM12 2C6.4773 2 2 6.4779 2 12.0004C2 17.5229 6.4773 22 12 22C17.5227 22 22 17.5229 22 12.0004C22 6.4779 17.5227 2 12 2Z" fill="currentColor"></path></g></svg>,
+        });
+
+        const configIndex = menuSections.findIndex(section => section.title === "Congigurations");
+
+        if (configIndex !== -1) {
+            menuSections.splice(configIndex, 0, {
+                title: 'Personnes',
+                items: [
+                    {
+                        id: "personne",
+                        label: "Personnes",
+                        icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="m-q/people"><path id="Vector" fillRule="evenodd" clipRule="evenodd" d="M17 18.2305V20H1C1 19.7209 1 18.4698 1 18.2206C1 16.8299 1.10101 15.9626 2.4899 15.4791C2.68182 15.4193 2.87879 15.3595 3.12121 15.3097C5.36869 14.8212 7.57576 14.3875 6.5202 12.5483C3.35859 7.09034 5.61616 4 8.99495 4C12.3131 4 14.6313 6.98069 11.4848 12.5533C10.4545 14.3826 12.5859 14.8262 14.8838 15.3146C15.1061 15.3645 15.2929 15.4143 15.4646 15.4741C16.8889 15.9526 17 16.8199 17 18.2305Z" fill="currentColor"></path><path id="Subtract" fillRule="evenodd" clipRule="evenodd" d="M17.9992 18H23.0002V16.6729C23.0002 15.615 22.9168 14.9645 21.8486 14.6056C21.7199 14.5607 21.5797 14.5234 21.413 14.486L21.3895 14.481C19.675 14.1166 18.0946 13.7807 18.8638 12.415C21.2236 8.23551 19.485 6 16.9964 6C14.4623 6 12.7691 8.31776 15.1403 12.4112C15.6844 13.3593 15.0726 13.8094 14.0896 14.1171C14.3998 14.1894 14.7299 14.2595 15.0774 14.3334L15.1029 14.3388C15.3436 14.3928 15.5691 14.4519 15.7885 14.528C16.6825 14.8294 17.327 15.3188 17.677 16.0891C17.9509 16.6919 17.9932 17.3773 17.9992 18Z" fill="currentColor"></path></g></svg>,
+                    },
+                    {
+                        id: "document",
+                        label: "Documents",
+                        icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="r-u/undefined-file"><path id="Subtract" fillRule="evenodd" clipRule="evenodd" d="M6.60004 21.002C4.61179 21.002 3 19.3902 3 17.4019L3 6.60177C3 4.61353 4.6118 3.00173 6.60005 3.00173L16 3.00173L21.0002 7.99994L21.0002 17.4019C21.0002 19.3902 19.3884 21.002 17.4002 21.002L6.60004 21.002ZM15.1502 8.9271C15.1502 9.13404 15.3179 9.30181 15.5249 9.30181L19.2738 9.30181C19.6077 9.30181 19.7749 8.89819 19.5388 8.66214L15.7898 4.91316C15.5538 4.6771 15.1502 4.84429 15.1502 5.17811L15.1502 8.9271Z" fill="currentColor"></path></g></svg>
+                    }
+                ]
+            });
+        }
+
+    }
 
     return (
         <div className="flex h-screen bg-gray-100 text-gray-800">
@@ -128,7 +159,7 @@ export default function Layout() {
                                         key={item.id}
                                         onClick={() => {
                                             setActiveItem(item.id)
-                                            navigate(`/dashboard/${item.id}`)
+                                            navigate(`/assnat-${DomaineName}/dashboard/${item.id}`)
                                         }}
                                         className={`flex items-center space-x-3 px-3 py-2 rounded-md cursor-pointer transition-colors ${activeItem === item.id
                                             ? "bg-emerald-100 text-[#27a082] font-semibold"

@@ -4,7 +4,7 @@ import { Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
 // import DropDownMenu from "../../../../components/drop-down";
 
-const DisponibilitesFeature = () => {
+const DisponibilitesFeatureAdmin = () => {
     return (
         <div className="h-full flex flex-col bg-white">
             <header className="border-b border-gray-200  px-5 py-3">
@@ -19,7 +19,7 @@ const DisponibilitesFeature = () => {
     );
 };
 
-export default DisponibilitesFeature;
+export default DisponibilitesFeatureAdmin;
 
 function AbsenceTypes() {
     const [year] = useState(2025);
