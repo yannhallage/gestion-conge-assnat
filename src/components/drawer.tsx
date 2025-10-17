@@ -20,17 +20,10 @@ export default function Drawer({ isOpen,
     }, [isOpen]);
     return (
         <>
-            {/* <button
-                onClick={() => setIsOpen(true)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition"
-            >
-                Voir les congés
-            </button> */}
 
             <div
                 className={`fixed inset-0 bg-black/10 z-20 transition-opacity ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                     }`}
-                // onClick={() => setIsOpen(false)}
                 onClick={onClose}
             ></div>
 

@@ -106,6 +106,9 @@ export default function Layout() {
         },
     ];
 
+    // if (DomaineName !== 'admin') {
+    //     menuSections[1].items.splice(2, 0, { id: "demandes", label: "Demandes", icon: <svg>...</svg> });
+    // }
 
     if (DomaineName === 'admin') {
         menuSections[1].items.push({

@@ -4,16 +4,22 @@ import { useState } from "react";
 import '../css/scroll.css'
 // import Drawer from "../../../../components/drawer";
 import DrawerAddPersonne from "../../../../components/admin/Drawer-add-personne";
+import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
+
 const AjouterPersonnel: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false)
-
+    const [isOpenConsultez, setIsOpenConsultez] = useState(false)
+    const [active, setActive] = useState<number>()
     const donneeDefault = [
         { id: 1, nom: "Yann", prenom: "Hallage" },
         { id: 2, nom: 'Cedrick', prenom: 'Hamed' },
     ]
     const OnclickDemandes = () => {
-        console.log('une demande selectionnée')
         setIsOpen(true)
+    }
+    const OnclickDemandesConsultez = (id: number) => {
+        setActive(id);
+        setIsOpenConsultez(true)
     }
     return (
         <div className="min-h-screen bg-white text-gray-700">
@@ -43,28 +49,27 @@ const AjouterPersonnel: React.FC = () => {
             <div className="px-6 py-2 text-sm text-gray-500">4 personnes</div>
             <div className="">
                 <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
-                    {
-                        donneeDefault.length > 0 && (
-                            donneeDefault.map((e) => (
-                                <div
-                                    key={e.id}
-                                    className="flex items-center hover:bg-gray-50 p-6 cursor-pointer group"
-                                // onClick={OnclickDemandes}
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
-                                        YH
-                                    </div>
-                                    <div className="ml-4 flex-1">
-                                        <div className="font-medium">{e.nom + ' ' + e.prenom}</div>
-                                        <div className="text-sm text-gray-500">
-                                            contact.devhllg@gmail.com
-                                        </div>
-                                    </div>
-                                    <Methode />
+                    {donneeDefault.length > 0 && (
+                        donneeDefault.map((e) => (
+                            <div
+                                key={e.id}
+                                className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === e.id ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
+                                onClick={() => OnclickDemandesConsultez(e.id)} // <-- passe l'id ici
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
+                                    YH
                                 </div>
-                            ))
-                        )
-                    }
+                                <div className="ml-4 flex-1">
+                                    <div className="font-medium">{e.nom + ' ' + e.prenom}</div>
+                                    <div className="text-sm text-gray-500">
+                                        contact.devhllg@gmail.com
+                                    </div>
+                                </div>
+                                <Methode />
+                            </div>
+                        ))
+                    )}
+
 
                 </div>
 
@@ -74,6 +79,9 @@ const AjouterPersonnel: React.FC = () => {
             </div>
             <DrawerAddPersonne
                 isOpen={isOpen} onClose={() => setIsOpen(false)}
+            />
+            <DrawerSeePersonneData
+                isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
             />
         </div>
     );
