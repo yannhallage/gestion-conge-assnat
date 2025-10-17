@@ -38,12 +38,21 @@ export default function DrawerAddPersonne({ isOpen, onClose }: DrawerProps) {
         }
     };
 
+    const handleClose = () => {
+        // Réinitialiser les états
+        setActiveTab("Primary");
+        setSendInvitation(false);
+
+        // Appeler la fonction de fermeture
+        onClose();
+    };
+
     return (
         <>
             <div
                 className={`fixed inset-0 bg-black/20 z-40 transition-opacity ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                     }`}
-                onClick={onClose}
+                onClick={handleClose}
             />
 
             <div
@@ -69,7 +78,7 @@ export default function DrawerAddPersonne({ isOpen, onClose }: DrawerProps) {
                             <span>Envoyer une invitation</span>
                         </label>
 
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">
+                        <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl">
                             ✕
                         </button>
                     </div>
