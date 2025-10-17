@@ -1,14 +1,30 @@
-import React from "react";
+import React from "react"
 import { Tooltip } from "react-tooltip";
+import { useState } from "react";
 import '../css/scroll.css'
-
+// import Drawer from "../../../../components/drawer";
+import DrawerAddPersonne from "../../../../components/admin/Drawer-add-personne";
 const AjouterPersonnel: React.FC = () => {
+    const [isOpen, setIsOpen] = useState(false)
+
+    const donneeDefault = [
+        { id: 1, nom: "Yann", prenom: "Hallage" },
+        { id: 2, nom: 'Cedrick', prenom: 'Hamed' },
+    ]
+    const OnclickDemandes = () => {
+        console.log('une demande selectionnée')
+        setIsOpen(true)
+    }
     return (
         <div className="min-h-screen bg-white text-gray-700">
             <div className="flex items-center p-2 border-b border-[#ccc]">
-                <button className="flex items-center justify-center text-xl w-8 h-8 bg-[#27a082] text-white">
-                    +
+                <button
+                    onClick={OnclickDemandes}
+                    data-tooltip-id="add" data-tooltip-content="add"
+                    className="flex items-center justify-center hover:bg-gray-20 cursor-pointer text-xl w-8 h-8 bg-[#27a082] text-white">
+                    <svg data-tooltip-id="add" data-tooltip-content="add" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv lui_icon_1uqg37zrid"><g id="a-d/add"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M13 11L13 4L11 4L11 11L4.00001 11L4.00001 13H11L11 20H13L13 13H20L20 11H13Z" fill="currentColor"></path></g></svg>
                 </button>
+                <Tooltip id="add" />
                 <h1 className="ml-3 text-lg font-medium">Personnes</h1>
             </div>
             <div className="flex items-center p-4 space-x-3 border-[#ccc] text-sm">
@@ -27,37 +43,38 @@ const AjouterPersonnel: React.FC = () => {
             <div className="px-6 py-2 text-sm text-gray-500">4 personnes</div>
             <div className="">
                 <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
-                    <div className="flex items-center hover:bg-gray-50 p-6 cursor-pointer group">
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
-                            YH
-                        </div>
-                        <div className="ml-4 flex-1">
-                            <div className="font-medium">Yann Hallage</div>
-                            <div className="text-sm text-gray-500">
-                                contact.devhllg@gmail.com
-                            </div>
-                        </div>
-                        <Methode />
-                    </div>
-                    <div className="flex items-center hover:bg-gray-50 p-6 cursor-pointer group">
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
-                            YH
-                        </div>
-                        <div className="ml-4 flex-1">
-                            <div className="font-medium">Yann Hallage</div>
-                            <div className="text-sm text-gray-500">
-                                contact.devhllg@gmail.com
-                            </div>
-                        </div>
-                        <Methode />
-                    </div>
+                    {
+                        donneeDefault.length > 0 && (
+                            donneeDefault.map((e) => (
+                                <div
+                                    key={e.id}
+                                    className="flex items-center hover:bg-gray-50 p-6 cursor-pointer group"
+                                // onClick={OnclickDemandes}
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
+                                        YH
+                                    </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="font-medium">{e.nom + ' ' + e.prenom}</div>
+                                        <div className="text-sm text-gray-500">
+                                            contact.devhllg@gmail.com
+                                        </div>
+                                    </div>
+                                    <Methode />
+                                </div>
+                            ))
+                        )
+                    }
+
                 </div>
 
-                <div className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
+                <div onClick={OnclickDemandes}  className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
                     + AJOUTER UNE PERSONNE
                 </div>
             </div>
-
+            <DrawerAddPersonne
+                isOpen={isOpen} onClose={() => setIsOpen(false)}
+            />
         </div>
     );
 };
