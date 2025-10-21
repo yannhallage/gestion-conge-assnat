@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 export default function Layout() {
     const navigate = useNavigate()
     const [activeItem, setActiveItem] = useState("horloge");
-    const [DomaineName, setDomaineName] = useState('admin');
+    const [DomaineName, setDomaineName] = useState('rh');
     const menuSections = [
         {
             title: "Présence",
@@ -52,11 +52,6 @@ export default function Layout() {
                     label: "Demandes",
                     icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" clipRule="evenodd" d="M16.915 1.99707H4V21.9941H21V6.10307L16.915 1.99707ZM16.235 17.7891H7.593V15.7521H16.235V17.7891ZM16.235 14.2411H7.593V12.2041H16.235V14.2411ZM15.896 7.14107V3.47007L19.542 7.14107H15.896Z" fill="currentColor" /></svg>,
                 },
-                // {
-                //     id: "approbations",
-                //     label: "Approbations",
-                //     icon: <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/approval"><path id="Fill 1" fill-rule="evenodd" clip-rule="evenodd" d="M11.6505 16.9027L7.12951 12.715L8.61414 11.1118L11.5296 13.8111L16.2144 8.73324L17.8199 10.2155L11.6505 16.9027ZM12 2C6.4773 2 2 6.4779 2 12.0004C2 17.5229 6.4773 22 12 22C17.5227 22 22 17.5229 22 12.0004C22 6.4779 17.5227 2 12 2Z" fill="currentColor"></path></g></svg>,
-                // },
                 {
                     id: "disponibilites",
                     label: "Disponibilités",
@@ -106,10 +101,6 @@ export default function Layout() {
         },
     ];
 
-    // if (DomaineName !== 'admin') {
-    //     menuSections[1].items.splice(2, 0, { id: "demandes", label: "Demandes", icon: <svg>...</svg> });
-    // }
-
     if (DomaineName === 'admin') {
         menuSections[1].items.push({
             id: "approbations",
@@ -138,6 +129,133 @@ export default function Layout() {
         }
 
     }
+    
+    if (DomaineName === 'rh') {
+        const presenceIndex = menuSections.findIndex(section => section.title === "Présence");
+        if (presenceIndex !== -1) {
+            menuSections[presenceIndex].items = [
+                {
+                    id: "dashboard",
+                    label: "Dashboard",
+                    icon: (
+                        <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 13H11V21H3V13ZM13 3H21V11H13V3ZM13 13H21V21H13V13ZM3 3H11V11H3V3Z" fill="currentColor" />
+                        </svg>
+                    ),
+                },
+            ];
+        }
+        const congeIndex = menuSections.findIndex(section => section.title === "Congés");
+        if (congeIndex !== -1) {
+            menuSections[congeIndex].items = [
+                {
+                    id: "calendrier",
+                    label: "Calendrier",
+                    icon: (
+                        <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M2 22.001V12.145H22.001V22.001H2ZM2 5.216H5.256V2H7.6V5.216H16.879V2H19.223V5.216H22.001V10.235H2V5.216Z"
+                                fill="currentColor"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    id: "demandes",
+                    label: "Demandes",
+                    icon: (
+                        <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M16.915 1.99707H4V21.9941H21V6.10307L16.915 1.99707Z"
+                                fill="currentColor"
+                            />
+                        </svg>
+                    ),
+                },
+                {
+                    id: "historique",
+                    label: "Historique",
+                    icon: (
+                        <svg
+                            width="24"
+                            height="24"
+                            className="text-gray-300"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <g id="a-d/clock">
+                                <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M9 2H15V0H9V2Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M16.1626 17.0796C13.9092 19.334 10.2547 19.334 8.00076 17.0796C7.58924 16.6674 7.25384 16.2081 6.99302 15.7199L12.0819 12.9979V7.22466C13.5591 7.22466 15.0356 7.78853 16.1626 8.91578C18.4166 11.1703 18.4166 14.8251 16.1626 17.0796ZM22 6.87547L20.4503 4.64077L18.8662 5.7396C14.9474 2.02897 8.76849 2.0848 4.92883 5.92485C1.02372 9.83087 1.02372 16.1645 4.92883 20.0705C8.83446 23.9765 15.1661 23.9765 19.0712 20.0705C22.3821 16.7593 22.8748 11.7083 20.5721 7.86619L22 6.87547Z"
+                                    fill="currentColor"
+                                />
+                            </g>
+                        </svg>
+                    ),
+                },
+            ];
+        }
+        const configIndex = menuSections.findIndex(section => section.title === "Congigurations");
+
+        if (configIndex !== -1) {
+            menuSections.splice(configIndex, 0, {
+                title: "Organisation",
+                items: [
+                    {
+                        id: "employes",
+                        label: "Employés",
+                        icon: (
+                            <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                                    fill="currentColor"
+                                />
+                                <path
+                                    d="M4 22V20C4 16.6863 6.68629 14 10 14H14C17.3137 14 20 16.6863 20 20V22H4Z"
+                                    fill="currentColor"
+                                />
+                            </svg>
+                        ),
+                    },
+                    {
+                        id: "direction",
+                        label: "Direction",
+                        icon: (
+                            <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L22 9H2L12 2Z" fill="currentColor" />
+                                <path d="M2 11H22V22H2V11Z" fill="currentColor" />
+                            </svg>
+                        ),
+                    },
+                    {
+                        id: "service",
+                        label: "Service",
+                        icon: (
+                            <svg width="24" height="24" className="text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M4 3H20V5H4V3Z" fill="currentColor" />
+                                <path d="M4 7H20V9H4V7Z" fill="currentColor" />
+                                <path d="M4 11H20V13H4V11Z" fill="currentColor" />
+                                <path d="M4 15H20V21H4V15Z" fill="currentColor" />
+                            </svg>
+                        ),
+                    },
+                ],
+            });
+        }
+    }
+
 
     return (
         <div className="flex h-screen bg-gray-100 text-gray-800">
