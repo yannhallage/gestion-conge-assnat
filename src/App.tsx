@@ -14,7 +14,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login-assnat" replace />} />
         <Route path="/login-assnat" element={<LoginAssnat />} />
-
         {RoleRoutes("user")}
         {RoleRoutes("admin")}
         {RoleRoutes("rh")}
