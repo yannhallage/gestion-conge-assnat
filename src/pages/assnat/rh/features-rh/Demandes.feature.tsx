@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
-
-// import { AlertTrianglet } from "lucide-react";
-// import Modal from "react-modal";
 import { Tooltip } from 'react-tooltip'
 import { ClipLoader } from "react-spinners"
-// import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmModal } from "../../../../components/modal-component";
-// import { motion } from "framer-motion";
 import Drawer from "../../../../components/drawer";
-// import { Offcanvas } from "../../../../components/offCanvas"
+
 
 const DemandesFeatureRh = () => {
     const [loading, setLoading] = useState(true);

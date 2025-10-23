@@ -1,19 +1,10 @@
 
 
-// export default function ServicesFeatures() {
-//     return (
-//         <span>
-//             services
-//         </span>
-//     )
-// }
-
-
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import '../css/scroll.css'
-import DrawerSeeDirectionData from "../../../../components/admin/Drawer-see-direction-data";
-import DrawerAddDirection from "../../../../components/admin/Drawer-add-direction";
+import DrawerSeeServiceData from "../../../../components/admin/Drawer-see-service-data";
+import DrawerAddService from "../../../../components/admin/Drawer-add-service";
 
 
 
@@ -92,10 +83,10 @@ export default function ServicesFeatures() {
                     + AJOUTER UNE SERVICE
                 </div>
             </div>
-            <DrawerAddDirection
+            <DrawerAddService
                 isOpen={isOpen} onClose={() => setIsOpen(false)}
             />
-            <DrawerSeeDirectionData
+            <DrawerSeeServiceData
                 isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
             />
         </div>
