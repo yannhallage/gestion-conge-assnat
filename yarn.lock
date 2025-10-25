@@ -552,6 +552,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@pdftron/pdfjs-express@^8.7.5":
+  version "8.7.5"
+  resolved "https://registry.yarnpkg.com/@pdftron/pdfjs-express/-/pdfjs-express-8.7.5.tgz#8871e5522361a8f24ee3134223273477958329d4"
+  integrity sha512-e0jlnsaK0WXx4Wg/IRuBlfBfhrRCR9o48SzjKxhOxT+PrLIy2hFVnXU0MlozSNb+VEcz3jV2K63yDuaHd41QVQ==
+
 "@popperjs/core@^2.9.3":
   version "2.11.8"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"

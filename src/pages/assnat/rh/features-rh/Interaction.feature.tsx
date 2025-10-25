@@ -44,7 +44,7 @@ export default function InteractionRhFeatures() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.1, ease: "easeOut" }}
             >
-                {/* <div className="flex items-center p-2 border-b border-[#ccc]">
+                <div className="flex items-center p-2 border-b border-[#ccc]">
                     <button
                         onClick={() => { setIsOpen (true)}}
                         className="flex items-center justify-center hover:bg-gray-20 cursor-pointer text-xl w-8 h-8 bg-[#27a082] text-white">
@@ -79,7 +79,7 @@ export default function InteractionRhFeatures() {
                     ) : (
                         <NotInteraction />
                     )}
-                </div> */}
+                </div>
 
                 {/* <NotInteraction /> */}
             </motion.div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Tooltip } from 'react-tooltip'
 import { ClipLoader } from "react-spinners"
 import { ConfirmModal } from "../../../../components/modal-component";
-import Drawer from "../../../../components/drawer";
+import Drawer from "../../../../components/rh/drawer";
 
 
 const DemandesFeatureRh = () => {

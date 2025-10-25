@@ -23,11 +23,11 @@ export default function DrawerAddPersonne({ isOpen, onClose }: DrawerProps) {
         document.body.style.overflow = isOpen ? "hidden" : "auto";
     }, [isOpen]);
 
-    const tabs = ["Primary", "Contact", "Administration"];
+    const tabs = ["Information personnel", "Contact", "Administration"];
 
     const renderComponent = () => {
         switch (activeTab) {
-            case "Primary":
+            case "Information personnel":
                 return <PrimaryComponent />;
             case "Contact":
                 return <ContactComponent />;
@@ -39,11 +39,8 @@ export default function DrawerAddPersonne({ isOpen, onClose }: DrawerProps) {
     };
 
     const handleClose = () => {
-        // Réinitialiser les états
         setActiveTab("Primary");
         setSendInvitation(false);
-
-        // Appeler la fonction de fermeture
         onClose();
     };
 
@@ -105,8 +102,8 @@ export default function DrawerAddPersonne({ isOpen, onClose }: DrawerProps) {
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`w-full text-left px-6 py-3 text-sm cursor-pointer ${tab === activeTab
-                                            ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50"
-                                            : "text-gray-700 hover:bg-gray-50"
+                                        ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50"
+                                        : "text-gray-700 hover:bg-gray-50"
                                         }`}
                                 >
                                     {tab}
@@ -128,34 +125,63 @@ function PrimaryComponent() {
     return (
         <>
             <div className="bg-white space-y-5">
-                <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Primary</h2>
+                <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Information personnel</h2>
                 <div className="space-y-5">
                     {[
-                        "First Name",
-                        "Last Name",
+                        "Nom de famille",
+                        "Prenoms",
                         "Email",
-                        "Gender",
+                        "Genre",
                         "Birthdate",
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
-                            <label className="w-1/3 text-[#abb2b9]">
-                                {label}*
-                            </label>
-                            <input
-                                type="text"
-                                placeholder={`Enter ${label.toLowerCase()}`}
-                                className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                            />
+                            {label === "Genre" ? (
+                                <>
+                                    <label className="w-1/3 text-[#abb2b9]">{label}</label>
+                                    <select
+                                        id="Genre"
+                                        className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    >
+                                        <option value="male">Homme</option>
+                                        <option value="female">Femme</option>
+                                    </select>
+                                </>
+                            ) : label === "Birthdate" ? (
+                                <div className="flex w-full items-center gap-6">
+                                    <label className="w-1/3 text-[#abb2b9]">{label}*</label>
+                                    <input
+                                        type="date"
+                                        placeholder="Enter your birthdate"
+                                        className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex w-full items-center gap-6">
+                                    <label className="w-1/3 text-[#abb2b9]">{label}*</label>
+                                    <input
+                                        type={
+                                            label === "Email"
+                                                ? "email"
+                                                : "text"
+                                        }
+                                        placeholder={`Enter ${label.toLowerCase()}`}
+                                        className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                                    />
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
+
             </div>
             <div className="bg-white space-y-5">
                 <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Identification</h2>
                 <div className="space-y-5">
                     {[
-                        "Employee's number",
+                        "Matricule Employé",
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
                             <label className="w-1/3 text-[#abb2b9]">
@@ -182,8 +208,8 @@ function ContactComponent() {
                 <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Business</h2>
                 <div className="space-y-5">
                     {[
-                        "Business email",
-                        "Business phone"
+                        "Email Professionel",
+                        "Telephone Professionel"
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
                             <label className="w-1/3 text-[#abb2b9]">
@@ -203,8 +229,8 @@ function ContactComponent() {
                 <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Personal</h2>
                 <div className="space-y-5">
                     {[
-                        "Personal email",
-                        "Personal phone",
+                        "Email personnel",
+                        "Téléphone personnel",
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
                             <label className="w-1/3 text-[#abb2b9]">
@@ -224,12 +250,12 @@ function ContactComponent() {
                 <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Address</h2>
                 <div className="space-y-5">
                     {[
-                        "Street",
+                        "Rue",
                         "Building / flat number",
-                        "City",
-                        "Province / State",
-                        "Postal code",
-                        "Country",
+                        "ville",
+                        "Commune",
+                        "code Postale",
+                        "Pays",
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
                             <label className="w-1/3 text-[#abb2b9]">
@@ -249,9 +275,9 @@ function ContactComponent() {
                 <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Emergency contact</h2>
                 <div className="space-y-5">
                     {[
-                        "Name",
+                        "Nom",
                         // "Relationship",
-                        "Phone"
+                        "Téléphone en cas d'urgence"
                     ].map((label, i) => (
                         <div key={i} className="flex items-center justify-between gap-6">
                             <label className="w-1/3 text-[#abb2b9]">
@@ -314,6 +340,16 @@ function AdministrationComponent() {
                 tandis que les <strong className="text-gray-700">gestionnaires </strong> nt une meilleure connaissance des données de leurs subordonnés. Vous pouvez changer de rôle à tout moment.
             </p>
 
+            <select id="category" className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition">
+                <option value="info">Direction informatique</option><option value="urgent">Direction Ressource humaine</option>
+                <option value="event">Direction Protocole</option><option value="policy">Direction Courrier</option>
+            </select>
+            <select id="category" className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition">
+                <option value="info">service Information</option><option value="urgent">service Urgent</option>
+                <option value="event">service Événement</option><option value="policy">service Politique</option>
+            </select>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
                 {roles.map((role, index) => (
                     <label
@@ -350,7 +386,7 @@ function AdministrationComponent() {
 //                         <input
 //                             type="text"
 //                             placeholder={`Enter ${label.toLowerCase()}`}
-//                             className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
+//                             className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700
 //                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
 //                         />
 //                     </div>

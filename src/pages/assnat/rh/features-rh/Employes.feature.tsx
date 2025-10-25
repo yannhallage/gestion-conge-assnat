@@ -2,8 +2,9 @@ import React from "react"
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import '../css/scroll.css'
-import DrawerAddPersonne from "../../../../components/admin/Drawer-add-personne";
+
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
+import DrawerAddPersonne from "../../../../components/rh/Drawer-add-personne";
 
 const EmployesFeatures: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -168,20 +169,3 @@ function Methode() {
         </div>
     )
 }
-
-
-{/* <div className="flex items-center hover:bg-gray-50 p-6 cursor-pointer">
-                        <div className="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center text-sm font-medium text-white">
-                            AO
-                        </div>
-                        <div className="ml-4">
-                            <div className="font-medium flex items-center space-x-1">
-                                <span>admin orathsa</span>
-                                <span className="text-yellow-500">👑</span>
-                            </div>
-                            <div className="text-sm text-gray-500">
-                                dedeve4402@arqsis.com
-                            </div>
-                        </div>
-                        
-                    </div> */}

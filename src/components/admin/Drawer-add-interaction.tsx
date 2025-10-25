@@ -174,31 +174,6 @@ function PrimaryComponent() {
                                 <option value="policy">Politique</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label className="block text-brand-gray-700 text-sm font-medium mb-2">Tags</label>
-                            <div className="flex flex-wrap gap-2">
-                                {allTags.map(tag => {
-                                    // const isSelected = formData.tags.includes(tag);
-                                    return (
-                                        <button
-                                            type="button"
-                                            key={tag}
-                                            // onClick={() => handleToggleTag(tag)}
-                                            // className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-teal 
-                                            //     ${isSelected
-                                            //     ? 'bg-brand-teal text-white border-brand-teal-dark'
-                                            //     : 'bg-white text-brand-gray-700 border-brand-gray-300 hover:bg-brand-gray-100'
-                                            //     }`}
-                                        >
-                                            {/* {tag} */}
-                                            {/* {isSelected && <Check className="w-4 h-4" />} */}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="relevantDate" className="block text-brand-gray-700 text-sm font-medium mb-1">Date concernée (optionnel)</label>
@@ -216,7 +191,7 @@ function PrimaryComponent() {
                                     id="category"
                                     // value={formData.category}
                                     // onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-3 py-2 border border-brand-gray-300 rounded-md focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-shadow text-brand-gray-800"
+                                    className="w-full px-3 py-2 border border-brand-gray-300  focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-shadow text-brand-gray-800"
                                 >
                                     <option value="info">Information</option>
                                     <option value="urgent">Urgent</option>
