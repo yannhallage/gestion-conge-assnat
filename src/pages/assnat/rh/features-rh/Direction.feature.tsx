@@ -92,7 +92,6 @@ export default function DirectionFeatures() {
     )
 }
 
-
 function Methode() {
     return (
         <div className="flex items-center gap-3 text-gray-500 

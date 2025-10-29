@@ -20,7 +20,7 @@ import DisponibilitesFeature from "../pages/assnat/user/features-user/Disponibil
 import CalendarFeature from "../pages/assnat/user/features-user/Calendar.feature";
 import RapportFeature from "../pages/assnat/user/features-user/Rapport.feature";
 
-import PresenceAdmin from "../pages/assnat/user/Presence";
+import PresenceAdmin from "../pages/assnat/admin/Presence";
 import DemandesFeatureAdmin from "../pages/assnat/admin/features-admin/Demandes.feature";
 import HistoriquesFeatureAdmin from "../pages/assnat/admin/features-admin/Historiques.feature";
 import ApprobationFeatureAdmin from "../pages/assnat/admin/features-admin/Approbations.feature";
@@ -37,6 +37,7 @@ import DashboardFeatures from "../pages/assnat/rh/features-rh/Dashbboard.feature
 import InteractionRhFeatures from "../pages/assnat/rh/features-rh/Interaction.feature";
 import RapportFeatureRh from "../pages/assnat/rh/features-rh/Rapport.feature";
 import PresenceRh from "../pages/assnat/rh/Presence";
+import InteractionUser from "../pages/assnat/user/features-user/Interaction.feature";
 
 
 export default function RoleRoutes(role: "user" | "admin" | "rh") {
@@ -45,7 +46,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
     if (role === "user") {
         return (
             <>
-                <Route path={`${base}`} element={<Layout><Presence /></Layout>} />
+                <Route path={`${base}/presence`} element={<Layout><Presence /></Layout>} />
                 <Route path={`${base}/demandes`} element={<Layout><DemandesFeature /></Layout>} />
                 <Route path={`${base}/demander`} element={<Layout><DemanderFeature /></Layout>} />
                 <Route path={`${base}/calendrier`} element={<Layout><CalendarFeature /></Layout>} />
@@ -53,13 +54,14 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
                 <Route path={`${base}/disponibilites`} element={<Layout><DisponibilitesFeature /></Layout>} />
                 <Route path={`${base}/historique`} element={<Layout><HistoriquesFeature /></Layout>} />
                 <Route path={`${base}/rapport`} element={<Layout><RapportFeature /></Layout>} />
+                <Route path={`${base}/interaction`} element={<Layout><InteractionUser /></Layout>} />
             </>
         );
     }
     if (role === "admin") {
         return (
             <>
-                <Route path={`${base}`} element={<Layout><PresenceAdmin /></Layout>} />
+                <Route path={`${base}/presence`} element={<Layout><PresenceAdmin /></Layout>} />
                 <Route path={`${base}/demandes`} element={<Layout><DemandesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/demander`} element={<Layout><DemanderFeatureAdmin /></Layout>} />
                 <Route path={`${base}/calendrier`} element={<Layout><CalendarFeatureAdmin /></Layout>} />
@@ -67,6 +69,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
                 <Route path={`${base}/disponibilites`} element={<Layout><DisponibilitesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/historique`} element={<Layout><HistoriquesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/rapport`} element={<Layout><RapportFeatureAdmin /></Layout>} />
+                <Route path={`${base}/interaction`} element={<Layout><InteractionUser /></Layout>} />
                 <Route path={`${base}/personne`} element={<Layout><AjouterPersonnel /></Layout>} />
             </>
         );

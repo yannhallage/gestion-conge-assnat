@@ -97,7 +97,7 @@ function MesDemandes() {
         setIsOpen(true)
     }
     return (
-        <div className="p-6 font-sans text-gray-800 h-screen overflow-y-auto ">
+        <div className="p-4 font-sans text-gray-800">
             <div className="flex flex-wrap items-center gap-3 mb-6">
                 <input
                     type="text"
@@ -121,7 +121,7 @@ function MesDemandes() {
                 </button>
             </div>
 
-            <div className="overflow-hidden shadow-sm bg-white">
+            <div className="overflow-hidden shadow-sm bg-white ">
                 <table className="w-full text-sm text-gray-800">
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
