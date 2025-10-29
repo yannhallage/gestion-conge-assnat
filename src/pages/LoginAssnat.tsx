@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import img from './../assets/36281.png'
 import { ArrowLeft, Eye, EyeOff, Facebook } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
+import { motion } from 'framer-motion';
 // import { useToast } from "@/components/ui/use-toast";
 
 const GoogleIcon = () => (
@@ -42,7 +43,11 @@ const LoginPage = () => {
     }
     return (
         <div className="min-h-screen bg-white font-sans">
-            <header className="p-4 border-b border-gray-200">
+            <motion.header className="p-4 border-b border-gray-200"
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.1, ease: "easeOut" }}
+            >
                 <div className="container mx-auto flex items-center justify-between">
                     <button className="text-gray-600 hover:text-gray-900" onClick={handleFeatureClick}>
                         {/* <ArrowLeft size={24} /> */}
@@ -50,11 +55,15 @@ const LoginPage = () => {
                     <img src="https://www.assnat.ci/imgsite/logo-anci4.png" alt="Logo" className="h-10" />
                     <div className="w-6"></div>
                 </div>
-            </header>
+            </motion.header>
 
             <div className="container mx-auto p-4 md:p-8 flex justify-center">
                 <div className="w-full max-w-5xl md:grid md:grid-cols-2 md:gap-16 md:ml-11 items-center">
-                    <div className="w-full max-w-md mx-auto">
+                    <motion.div className="w-full max-w-md mx-auto"
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.1, ease: "easeOut" }}
+                    >
                         <h1 className="text-2xl font-bold text-center text-gray-800">ASSNAT</h1>
                         <p className="text-gray-500 text-center mt-2 mb-6">Accédez à votre espace de travail institutionnel pour profiter de toutes nos fonctionnalités</p>
 
@@ -120,23 +129,22 @@ const LoginPage = () => {
 
                         <div className="flex items-center justify-center pt-4">
                             <div className="flex items-center border-[#ccc] space-x-2 px-4 py-2 bg-secondary/5 border border-secondary/10 rounded-full">
-                                {/* <Icon
-                                    name="Award"
-                                    size={14}
-                                    color="var(--color-secondary)"
-                                /> */}
                                 <span className="text-xs font-caption text-[#555] text-secondary font-medium">
                                     Gouvernement de Côte d'Ivoire
                                 </span>
                             </div>
                         </div>
 
-                    </div>
-                    <div className="hidden md:block">
+                    </motion.div>
+                    <motion.div className="hidden md:block"
+                        initial={{ opacity: 0, x: 12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.1, ease: "easeOut" }}
+                    >
                         <img className="rounded-lg object-cover w-100 h-100"
                             alt="Family enjoying a road trip next to their car in a sunny field"
                             src={img} />
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
