@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 export default function Layout() {
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState("horloge");
-  const [DomaineName, setDomaineName] = useState("rh");
+  const [DomaineName, setDomaineName] = useState("user");
+  
   const menuSections = [
     {
       title: "Présence",

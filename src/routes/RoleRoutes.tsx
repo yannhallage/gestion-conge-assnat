@@ -39,6 +39,9 @@ import RapportFeatureRh from "../pages/assnat/rh/features-rh/Rapport.feature";
 import PresenceRh from "../pages/assnat/rh/Presence";
 import InteractionUser from "../pages/assnat/user/features-user/Interaction.feature";
 import TypeCongeFeature from "../pages/assnat/rh/features-rh/TypeConge.feature";
+import CalendarFeatureRH from "../pages/assnat/rh/features-rh/Calendar.feature";
+// import CalendarView from "../components/rh/CalendarView";
+
 
 
 export default function RoleRoutes(role: "user" | "admin" | "rh") {
@@ -81,7 +84,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
                 <Route path={`${base}`} element={<Layout><PresenceRh /></Layout>} />
                 <Route path={`${base}/dashboard`} element={<Layout><DashboardFeatures /></Layout>} />
                 <Route path={`${base}/demandes`} element={<Layout><DemandesFeatureRh /></Layout>} />
-                <Route path={`${base}/calendrier`} element={<Layout><CalendarFeatureAdmin /></Layout>} />
+                <Route path={`${base}/calendrier`} element={<Layout><CalendarFeatureRH /></Layout>} />
                 <Route path={`${base}/historique`} element={<Layout><HistoriquesFeatureAdmin /></Layout>} />
                 <Route path={`${base}/rapport`} element={<Layout><RapportFeatureRh /></Layout>} />
                 <Route path={`${base}/employes`} element={<Layout><EmployesFeatures /></Layout>} />

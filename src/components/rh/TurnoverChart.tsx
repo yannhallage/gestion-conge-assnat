@@ -24,7 +24,7 @@ const TurnoverChart = () => {
                     TURNOVER PAR ÉTABLISSEMENT
                 </h2>
                 <div className="flex items-center gap-4">
-                    <div className="text-2xl font-bold text-gray-900">S31 2023</div>
+                    <div className="text-xl font-bold text-gray-900">S31 2023</div>
                     <div className="flex items-center gap-2 text-sm">
                         <div className="w-3 h-3 bg-teal-600 rounded-full"></div>
                         <span className="text-gray-600">9,62 %</span>

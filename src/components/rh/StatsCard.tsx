@@ -15,14 +15,14 @@ const StatsCard: React.FC<StatsCardProps> = ({ label, value, change, isPositive 
             whileHover={{ scale: 1.02 }}
             className="bg-white rounded-lg p-4 shadow-sm border border-gray-200"
         >
-            <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
+            <div className="text-[12px] font-medium text-gray-500 mb-2 uppercase tracking-wide">
                 {label}
             </div>
             <div className="flex items-end justify-between">
-                <div className="text-2xl font-bold text-gray-900">{value}</div>
+                <div className="text-xl font-bold text-gray-900">{value}</div>
                 {change && (
                     <div
-                        className={`flex items-center text-xs font-medium ${isPositive ? "text-green-600" : "text-red-600"
+                        className={`flex items-center text-[12px] font-medium ${isPositive ? "text-green-600" : "text-red-600"
                             }`}
                     >
                         {isPositive ? (

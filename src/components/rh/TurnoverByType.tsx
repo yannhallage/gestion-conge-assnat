@@ -11,7 +11,7 @@ const TurnoverByType = () => {
 
     return (
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 h-full">
-            <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-6">
+            <h2 className="text-[13px] font-semibold text-gray-600 uppercase tracking-wide mb-6">
                 TURNOVER PAR ÉTABLISSEMENT
             </h2>
 
@@ -24,10 +24,10 @@ const TurnoverByType = () => {
                         transition={{ delay: index * 0.1, duration: 0.5 }}
                     >
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-[13px] font-medium text-gray-700">
                                 {establishment.name}
                             </span>
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-[13px] font-semibold text-gray-900">
                                 {establishment.percentage} %
                             </span>
                         </div>

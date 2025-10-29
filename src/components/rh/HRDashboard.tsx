@@ -48,7 +48,7 @@ const HRDashboard: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Effectifs</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-8">Effectifs</h1>
       </motion.div>
 
       {/* Filtres */}

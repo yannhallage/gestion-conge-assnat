@@ -16,7 +16,7 @@ import { fr } from "date-fns/locale";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 
-const CalendarFeatureAdmin = () => {
+const CalendarFeatureRH = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -50,7 +50,7 @@ const CalendarFeatureAdmin = () => {
     );
 };
 
-export default CalendarFeatureAdmin;
+export default CalendarFeatureRH;
 
 
 
