@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import img from './../assets/36281.png'
-import { ArrowLeft, Eye, EyeOff, Facebook } from 'lucide-react';
+import { Eye, EyeOff, Facebook } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
-import { motion } from 'framer-motion';
-// import { useToast } from "@/components/ui/use-toast";
+import { motion } from 'framer-motion';;
 
 const GoogleIcon = () => (
     <svg className="w-4 h-4 mr-2" viewBox="0 0 48 48">
@@ -25,13 +24,8 @@ const LoginPage = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [isButton, setIsButton] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    // const { toast } = useToast();
 
     const handleFeatureClick = () => {
-        // toast({
-        //     title: "🚧 Fonctionnalité en cours de développement !",
-        //     description: "Ne vous inquiétez pas, vous pourrez la demander dans votre prochain message ! 🚀",
-        // });
         setIsButton(true)
     };
 
@@ -50,7 +44,6 @@ const LoginPage = () => {
             >
                 <div className="container mx-auto flex items-center justify-between">
                     <button className="text-gray-600 hover:text-gray-900" onClick={handleFeatureClick}>
-                        {/* <ArrowLeft size={24} /> */}
                     </button>
                     <img src="https://www.assnat.ci/imgsite/logo-anci4.png" alt="Logo" className="h-10" />
                     <div className="w-6"></div>
@@ -96,10 +89,10 @@ const LoginPage = () => {
 
                         <form>
                             <div className="mb-4">
-                                <input type="email" placeholder={isLogin ? `Adresse email` : `Adresse email administrateur`} className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                                <input type="email" placeholder={isLogin ? `Adresse email` : `Adresse email administrateur`} className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#27a082]" />
                             </div>
                             <div className="relative mb-4">
-                                <input type={showPassword ? "text" : "password"} placeholder={isLogin ? `Mot de passe` : 'Mot de passe administrateur'} className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                                <input type={showPassword ? "text" : "password"} placeholder={isLogin ? `Mot de passe` : 'Mot de passe administrateur'} className="w-full px-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#27a082]" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-gray-600">
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>

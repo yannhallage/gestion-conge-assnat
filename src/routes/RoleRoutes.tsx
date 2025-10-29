@@ -38,6 +38,7 @@ import InteractionRhFeatures from "../pages/assnat/rh/features-rh/Interaction.fe
 import RapportFeatureRh from "../pages/assnat/rh/features-rh/Rapport.feature";
 import PresenceRh from "../pages/assnat/rh/Presence";
 import InteractionUser from "../pages/assnat/user/features-user/Interaction.feature";
+import TypeCongeFeature from "../pages/assnat/rh/features-rh/TypeConge.feature";
 
 
 export default function RoleRoutes(role: "user" | "admin" | "rh") {
@@ -87,6 +88,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
                 <Route path={`${base}/direction`} element={<Layout><DirectionFeatures /></Layout>} />
                 <Route path={`${base}/service`} element={<Layout><ServicesFeatures /></Layout>} />
                 <Route path={`${base}/interaction`} element={<Layout><InteractionRhFeatures /></Layout>} />
+                <Route path={`${base}/typeconge`} element={<Layout><TypeCongeFeature /></Layout>} />
             </>
         );
     }

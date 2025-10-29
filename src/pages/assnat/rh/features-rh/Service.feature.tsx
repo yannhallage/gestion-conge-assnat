@@ -1,10 +1,10 @@
 
-
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import '../css/scroll.css'
 import DrawerSeeServiceData from "../../../../components/admin/Drawer-see-service-data";
 import DrawerAddService from "../../../../components/admin/Drawer-add-service";
+import { motion } from "framer-motion";
 
 
 
@@ -28,7 +28,11 @@ export default function ServicesFeatures() {
         setIsOpenConsultez(true)
     }
     return (
-        <div className="min-h-screen bg-white text-gray-700">
+        <motion.div className="min-h-screen bg-white text-gray-700"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
+        >
             <div className="flex items-center p-2 border-b border-[#ccc]">
                 <button
                     onClick={OnclickDemandes}
@@ -89,7 +93,7 @@ export default function ServicesFeatures() {
             <DrawerSeeServiceData
                 isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
             />
-        </div>
+        </motion.div>
     )
 }
 

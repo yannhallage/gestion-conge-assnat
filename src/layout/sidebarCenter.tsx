@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 export default function Layout() {
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState("horloge");
-  const [DomaineName, setDomaineName] = useState("user");
+  const [DomaineName, setDomaineName] = useState("rh");
   const menuSections = [
     {
       title: "Présence",
@@ -512,6 +512,24 @@ export default function Layout() {
           {
             id: "service",
             label: "Service",
+            icon: (
+              <svg
+                width="24"
+                height="24"
+                className="text-gray-300"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M4 3H20V5H4V3Z" fill="currentColor" />
+                <path d="M4 7H20V9H4V7Z" fill="currentColor" />
+                <path d="M4 11H20V13H4V11Z" fill="currentColor" />
+                <path d="M4 15H20V21H4V15Z" fill="currentColor" />
+              </svg>
+            ),
+          },
+          {
+            id: "typeconge",
+            label: "typeconge",
             icon: (
               <svg
                 width="24"

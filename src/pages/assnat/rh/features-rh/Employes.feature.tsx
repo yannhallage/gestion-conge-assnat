@@ -5,6 +5,7 @@ import '../css/scroll.css'
 
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
 import DrawerAddPersonne from "../../../../components/rh/Drawer-add-personne";
+import { motion } from "framer-motion";
 
 const EmployesFeatures: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false)
@@ -22,7 +23,11 @@ const EmployesFeatures: React.FC = () => {
         setIsOpenConsultez(true)
     }
     return (
-        <div className="min-h-screen bg-white text-gray-700">
+        <motion.div className="min-h-screen bg-white text-gray-700"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
+        >
             <div className="flex items-center p-2 border-b border-[#ccc]">
                 <button
                     onClick={OnclickDemandes}
@@ -83,7 +88,7 @@ const EmployesFeatures: React.FC = () => {
             <DrawerSeePersonneData
                 isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
             />
-        </div>
+        </motion.div>
     );
 };
 

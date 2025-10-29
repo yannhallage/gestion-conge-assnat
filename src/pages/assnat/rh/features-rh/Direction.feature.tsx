@@ -4,6 +4,7 @@ import { useState } from "react";
 import '../css/scroll.css'
 import DrawerSeeDirectionData from "../../../../components/admin/Drawer-see-direction-data";
 import DrawerAddDirection from "../../../../components/admin/Drawer-add-direction";
+import { motion } from "framer-motion";
 
 
 
@@ -27,7 +28,11 @@ export default function DirectionFeatures() {
         setIsOpenConsultez(true)
     }
     return (
-        <div className="min-h-screen bg-white text-gray-700">
+        <motion.div className="min-h-screen bg-white text-gray-700"
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.1, ease: "easeOut" }}
+        >
             <div className="flex items-center p-2 border-b border-[#ccc]">
                 <button
                     onClick={OnclickDemandes}
@@ -88,7 +93,7 @@ export default function DirectionFeatures() {
             <DrawerSeeDirectionData
                 isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
             />
-        </div>
+        </motion.div>
     )
 }
 
