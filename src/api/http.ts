@@ -1,28 +1,77 @@
-// src/api/http.ts
-const BASE_URL = "http://localhost:2001/api";
+const BASE_URL = "http://localhost:3000";
 
-interface RequestOptions extends RequestInit {
+export interface RequestOptions extends RequestInit {
     body?: any;
+    token?: string; // JWT ou autre token d'authentification
+    queryParams?: Record<string, string | number>; // support des query params
 }
 
-export const Http = async (endpoint: string, options: RequestOptions = {}) => {
-    const url = `${BASE_URL}${endpoint}`;
+export const Http = async <T = any>(
+    endpoint: string,
+    options: RequestOptions = {}
+): Promise<T> => {
+    try {
+        let url = `${BASE_URL}${endpoint}`;
 
-    const config: RequestInit = {
-        ...options,
-        headers: {
+        // 🔗 Gestion des query params
+        if (options.queryParams) {
+            const queryString = new URLSearchParams(
+                Object.entries(options.queryParams).map(([k, v]) => [k, v.toString()])
+            ).toString();
+            url += `?${queryString}`;
+        }
+
+        // 🧱 Gestion propre des headers
+        const baseHeaders: Record<string, string> = {
             "Content-Type": "application/json",
-            ...(options.headers || {}),
-        },
-        body: options.body ? JSON.stringify(options.body) : undefined,
-    };
+        };
 
-    const res = await fetch(url, config);
+        // On merge les headers fournis par l'utilisateur (si c’est un objet simple)
+        const extraHeaders =
+            options.headers && !(options.headers instanceof Headers)
+                ? (options.headers as Record<string, string>)
+                : {};
 
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Erreur API inconnue");
+        const headers: Record<string, string> = {
+            ...baseHeaders,
+            ...extraHeaders,
+        };
+
+        // 🪪 Ajouter le token si fourni
+        if (options.token) {
+            headers["Authorization"] = `Bearer ${options.token}`;
+        }
+
+        const res = await fetch(url, {
+            ...options,
+            headers,
+            body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+
+        const contentType = res.headers.get("content-type");
+
+        // ❌ Gestion des erreurs HTTP
+        if (!res.ok) {
+            let errorMsg = await res.text();
+            try {
+                if (contentType?.includes("application/json")) {
+                    const json = await res.json();
+                    errorMsg = json.message || JSON.stringify(json);
+                }
+            } catch {
+                /* ignore parsing error */
+            }
+            throw new Error(errorMsg || `Erreur HTTP ${res.status}`);
+        }
+
+        // ✅ Retour JSON ou texte
+        if (contentType?.includes("application/json")) {
+            return res.json();
+        }
+
+        return (await res.text()) as unknown as T;
+    } catch (err: any) {
+        console.error(`[HTTP ERROR] ${endpoint}:`, err.message || err);
+        throw err;
     }
-
-    return res.json();
 };

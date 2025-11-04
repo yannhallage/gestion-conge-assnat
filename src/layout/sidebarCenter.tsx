@@ -1,10 +1,24 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import type{ ReactNode } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function Layout() {
+interface LayoutProps {
+  children?: ReactNode;
+  role: "user" | "admin" | "rh";
+}
+
+export default function SidebarCenter({ children, role }: LayoutProps) {
   const navigate = useNavigate();
-  const [activeItem, setActiveItem] = useState("horloge");
-  const [DomaineName, setDomaineName] = useState("user");
+  const location = useLocation();
+  const [activeItem, setActiveItem] = useState<string>("");
+  const [DomaineName, setDomaineName] = useState<"user" | "admin" | "rh">(role);
+
+  useEffect(() => {
+    // Définir automatiquement l'élément actif selon l'URL
+    const pathParts = location.pathname.split("/");
+    const lastPart = pathParts[pathParts.length - 1];
+    setActiveItem(lastPart);
+  }, [location.pathname]);
   
   const menuSections = [
     {

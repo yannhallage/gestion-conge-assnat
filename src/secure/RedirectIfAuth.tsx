@@ -1,27 +1,25 @@
-import { jwtDecode } from 'jwt-decode';
-import { getSession } from "@/lib/localstorage";
-import { Navigate } from 'react-router-dom';
+// src/components/RedirectIfAuth.tsx
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-const isTokenValid = (token: string): unknown => {
-    try {
-        const decoded: any = jwtDecode(token);
-        const now = Date.now() / 1000;
-        return decoded.exp > now;
-    } catch {
-        return false;
+const RedirectIfAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, token } = useAuth();
+
+  if (token && user) {
+    switch (user.role) {
+      case "rh":
+        return <Navigate to="/assnat-rh/dashboard/presence" replace />;
+      case "admin":
+        return <Navigate to="/assnat-admin/dashboard/presence" replace />;
+      case "chef":
+        return <Navigate to="/assnat-chef/dashboard/presence" replace />;
+      default:
+        return <Navigate to="/assnat-user/dashboard/presence" replace />;
     }
+  }
+
+  return <>{children}</>;
 };
-
-const RedirectIfAuth = ({ children }: { children: React.ReactNode }) => {
-    const session = getSession();
-    const token = session.token_connexion;
-
-    if (token && isTokenValid(token)) {
-        return <Navigate to="/web" replace />;
-    }
-
-    return <>{children}</>;
-};
-
 
 export default RedirectIfAuth;

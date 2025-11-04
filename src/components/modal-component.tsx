@@ -2,6 +2,7 @@ import React from "react";
 import Modal from "react-modal";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 Modal.setAppElement("#root");
 
@@ -20,10 +21,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     title,
     description,
     cancel,
-    confirm,
+    // confirm,
     cancelText = "Annuler",
     confirmText = "Confirmer",
 }) => {
+
+    const { logout } = useAuth();
+    const handleConfirm = logout;
     return (
         <AnimatePresence>
             {isOpen && (
@@ -56,7 +60,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                                     {cancelText}
                                 </button>
                                 <button
-                                    onClick={confirm}
+                                    onClick={handleConfirm}
                                     className="px-4 py-2 bg-yellow-400 text-white font-medium hover:bg-yellow-500 transition"
                                 >
                                     {confirmText}

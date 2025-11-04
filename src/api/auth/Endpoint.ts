@@ -1,6 +1,3 @@
-
 export const ENDPOINTS_AUTH = {
-    // email: "/auth/authentification/email",
-    // password: '/auth/authentification/password',
-    // masterKey: '/auth/authentification/master-key',
+    login: '/auth/login', // POST : Connexion du personnel, retourne un token JWT
 };

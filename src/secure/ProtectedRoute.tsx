@@ -1,27 +1,33 @@
-import { getSession } from "@/lib/localstorage";
-import { jwtDecode } from "jwt-decode";
+import React from "react";
+import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-const isTokenValid = (token: unknown): boolean => {
-    try {
-        const decoded: any = jwtDecode(token);
-        const now = Date.now() / 1000;
-        return decoded.exp > now;
-    } catch {
-        return false;
-    }
-};
+export interface ProtectedRouteProps {
+    children: ReactNode;
+    role?: "user" | "admin" | "rh" | "chef";
+}
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const session = getSession();
-    const token = session.token_connexion;
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, role }) => {
+    const { user, token, loading } = useAuth();
 
-    if (!token || !isTokenValid(token)) {
-        return <Navigate to="/auth" replace />;
+    // ⏳ Tant que l'état d'authentification se charge
+    if (loading) {
+        return <div>Chargement...</div>; // Tu peux mettre un vrai spinner si tu veux
     }
 
+    // 🚫 Pas connecté → redirection vers la page de login
+    if (!token || !user) {
+        return <Navigate to="/login-assnat" replace />;
+    }
+
+    // 🚫 Mauvais rôle → redirection vers le dashboard correspondant
+    if (role && user.role !== role) {
+        return <Navigate to={`/assnat-${user.role}/dashboard/presence`} replace />;
+    }
+
+    // ✅ Tout est bon → on affiche le contenu protégé
     return <>{children}</>;
 };
-
 
 export default ProtectedRoute;
