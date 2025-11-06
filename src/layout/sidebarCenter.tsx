@@ -570,8 +570,13 @@ export default function SidebarCenter({ children, role }: LayoutProps) {
       <aside className="w-64 bg-[#f6f7f9] border-r border-gray-300 flex flex-col justify-between p-5 overflow-y-auto">
         <div>
           <div className="flex items-center mb-6">
-            <img
+            {/* <img
               src="https://app-new.calamari.io/version-5.249.2/assets/logo-C94mehfa.svg"
+              alt="logo"
+              className="h-10"
+            /> */}
+            <img
+              src="https://www.assnat.ci/imgsite/logo-anci4.png"
               alt="logo"
               className="h-10"
             />

@@ -81,7 +81,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
     if (role === "rh") {
         return [
             <Route key="rh-base" path={`${base}`} element={wrap(<DashboardFeatures />)} />,
-            <Route key="rh-dashboard" path={`${base}/dashboard`} element={wrap(<DashboardFeatures />)} />,
+            <Route key="rh-dashboard" path={`${base}/presence`} element={wrap(<DashboardFeatures />)} />,
             <Route key="rh-demandes" path={`${base}/demandes`} element={wrap(<DemandesFeatureRh />)} />,
             <Route key="rh-calendrier" path={`${base}/calendrier`} element={wrap(<CalendarFeatureRH />)} />,
             <Route key="rh-historique" path={`${base}/historique`} element={wrap(<HistoriquesFeatureRh />)} />,

@@ -16,15 +16,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, role }) => {
         return <div>Chargement...</div>; // Tu peux mettre un vrai spinner si tu veux
     }
 
-    // 🚫 Pas connecté → redirection vers la page de login
     if (!token || !user) {
         return <Navigate to="/login-assnat" replace />;
     }
 
-    // 🚫 Mauvais rôle → redirection vers le dashboard correspondant
     if (role && user.role !== role) {
-        return <Navigate to={`/assnat-${user.role}/dashboard/presence`} replace />;
+        const redirectPath =
+            user.role === 'rh'
+                ? `/assnat-rh/dashboard/`
+                : `/assnat-${user.role}/dashboard/presence`;
+
+        return <Navigate to={redirectPath} replace />;
     }
+
+    // // 🚫 Mauvais rôle → redirection vers le dashboard correspondant
+    // if (role && user.role !== role) {
+    //     return <Navigate to={`/assnat-${user.role}/dashboard/presence`} replace />;
+    // }
 
     // ✅ Tout est bon → on affiche le contenu protégé
     return <>{children}</>;

@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             switch (appRole) {
                 case "rh":
-                    navigate("/assnat-rh/dashboard/presence");
+                    navigate("/assnat-rh/dashboard");
                     break;
                 case "admin":
                     navigate("/assnat-admin/dashboard/presence");

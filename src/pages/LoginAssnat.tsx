@@ -1,9 +1,11 @@
 import { useState } from 'react';
+
 import img from './../assets/36281.png';
 import { Eye, EyeOff, Facebook } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import ErrorMessage from '../errors/ErrorMessage';
 
 
 
@@ -35,24 +37,30 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans">
+        <div className="min-h-screen space-y-3 bg-white font-sans">
             <motion.header className="p-4 border-b border-gray-200"
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.1, ease: "easeOut" }}
+                transition={{
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1] // courbe "easeOut" plus douce
+                }}
             >
-                <div className="container mx-auto flex items-center justify-between">
+                <div className="container mx-auto flex items-center justify-center">
                     <img src="https://www.assnat.ci/imgsite/logo-anci4.png" alt="Logo" className="h-10" />
                     <div className="w-6"></div>
                 </div>
             </motion.header>
 
-            <div className="container mx-auto p-4 md:p-8 flex justify-center">
+            <div className="container mx-auto p-4 mt-10 md:p-8 flex justify-center">
                 <div className="w-full max-w-5xl md:grid md:grid-cols-2 md:gap-16 md:ml-11 items-center">
                     <motion.div className="w-full max-w-md mx-auto"
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.1, ease: "easeOut" }}
+                        initial={{ opacity: 0, y: -12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: 0.8,
+                            ease: [0.16, 1, 0.3, 1] // courbe "easeOut" plus douce
+                        }}
                     >
                         <h1 className="text-2xl font-bold text-center text-gray-800">ASSNAT</h1>
                         <p className="text-gray-500 text-center mt-2 mb-6">
@@ -116,7 +124,7 @@ const LoginPage = () => {
                                 className="w-full cursor-pointer bg-[#27a082] text-white py-3 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
                             >
                                 {loading ? (
-                                    <ClipLoader color="#fff" size={20} speedMultiplier={2} />
+                                    <ClipLoader color="#fff" size={20} speedMultiplier={1} />
                                 ) : (
                                     "Se connecter"
                                 )}
