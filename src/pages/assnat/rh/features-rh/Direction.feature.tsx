@@ -1,30 +1,41 @@
 
 import { Tooltip } from "react-tooltip";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import '../css/scroll.css'
 import DrawerSeeDirectionData from "../../../../components/admin/Drawer-see-direction-data";
 import DrawerAddDirection from "../../../../components/admin/Drawer-add-direction";
 import { motion } from "framer-motion";
-
-
+import { useRhService } from "../../../../hooks/rh/useRhService";
+import { ClipLoader } from "react-spinners";
+import type { Direction } from '../../../../types/validation.dto';
 
 export default function DirectionFeatures() {
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenConsultez, setIsOpenConsultez] = useState(false)
-    const [active, setActive] = useState<number>()
-    const donneeDefault = [
-        { id: 1, nom: "Direction du courier" },
-        { id: 2, nom: 'Direction protocole et logistique' },
-        { id: 3, nom: 'Direction systeme informatique et documentation' },
-        { id: 5, nom: 'Direction des affaires etrangeres' },
-        { id: 6, nom: 'Direction des ressources humaine' },
-        { id: 7, nom: 'Direction services sante' },
-    ]
+    const [active, setActive] = useState<string | undefined>();
+    const [directions, setDirections] = useState<Direction[]>([])
+
+    const { loading, error, getAllDirections } = useRhService();
+
+    useEffect(() => {
+        const fetchDirections = async () => {
+            try {
+                const res = await getAllDirections();
+                // Supposons que la réponse renvoie un tableau d'objets avec { id, nom }
+                setDirections(res || []);
+            } catch (err) {
+                console.error("Erreur lors de la récupération des directions :", err);
+            }
+        };
+
+        fetchDirections();
+    }, [getAllDirections]);
+
     const OnclickDemandes = () => {
         setIsOpen(true)
     }
-    const OnclickDemandesConsultez = (id: number) => {
-        setActive(id);
+    const OnclickDemandesConsultez = (id_direction: string) => {
+        if (id_direction) setActive(id_direction);
         setIsOpenConsultez(true)
     }
     return (
@@ -56,21 +67,26 @@ export default function DirectionFeatures() {
                     <span className="text-[#ccc]">Statut: <span className="font-medium text-[#555]">Actif</span></span>
                 </div>
                 <button className="text-[#27a082] font-medium cursor-pointer">+ AJOUTER UN FILTRE</button>            </div>
-            <div className="px-6 py-2 text-sm text-gray-500">{donneeDefault.length ? `${donneeDefault.length} directions` : ''}</div>
+            <div className="px-6 py-2 text-sm text-gray-500">{directions.length ? `${directions.length} directions` : ''}</div>
             <div className="">
+                {loading && <p className="p-4 text-gray-500">
+                    <ClipLoader
+                    size={12}/>
+                </p>}
+                {error && <p className="p-4 text-red-500">{error}</p>}
                 <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
-                    {donneeDefault.length > 0 && (
-                        donneeDefault.map((e) => (
+                    {directions.length > 0 && (
+                        directions.map((e) => (
                             <div
-                                key={e.id}
-                                className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === e.id ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
-                                onClick={() => OnclickDemandesConsultez(e.id)}
+                                key={e.id_direction}
+                                className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === e.id_direction ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
+                                onClick={() => OnclickDemandesConsultez(e.id_direction)}
                             >
                                 <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
                                     D
                                 </div>
                                 <div className="ml-4 flex-1">
-                                    <div className="font-medium">{e.nom}</div>
+                                    <div className="font-medium">{e.nom_direction}</div>
                                     <div className="text-sm text-gray-500">
                                         contact.devhllg@gmail.com
                                     </div>
