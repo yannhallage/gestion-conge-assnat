@@ -41,6 +41,20 @@ export function useChefService() {
         }
     }, []);
 
+    const getHistoriqueDemandes = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await chefService.getHistoriqueDemandes();
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de la récupération de l'historique");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     const approveDemande = useCallback(async (demandeId: string, chef: ChefActionPayload, payload: ApproveDemandePayload) => {
         try {
             setLoading(true);
@@ -130,6 +144,7 @@ export function useChefService() {
         error,
         invitePersonnel,
         getServiceDemandes,
+        getHistoriqueDemandes,
         approveDemande,
         rejectDemande,
         revokeDemande,

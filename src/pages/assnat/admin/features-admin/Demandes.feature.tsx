@@ -9,7 +9,7 @@ import { useChefService } from "../../../../hooks/chefdeservice/useChefService";
 import { useAuth } from "../../../../contexts/AuthContext";
 import type { ApproveDemandePayload, RejectDemandePayload, ChefActionPayload } from "../../../../types/validation.dto";
 
-type DemandeStatus = "EN_ATTENTE" | "EN_COURS" | "APPROUVEE" | "REFUSEE" | string;
+type DemandeStatus = "EN_ATTENTE" | "EN_COURS" | "APPROUVEE"  | string;
 
 type Demande = {
     id_demande: string;
@@ -53,7 +53,7 @@ type Demande = {
     } | null;
 };
 
-type ModalType = "approve" | "reject" | "revoke" | "delete" | null;
+type ModalType = "approve" | "reject" | "revoke" | null;
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
     EN_ATTENTE: { label: "En attente", className: "bg-amber-50 border border-amber-200 text-amber-700" },
@@ -88,7 +88,6 @@ function MesDemandes() {
         approveDemande,
         rejectDemande,
         revokeDemande,
-        deleteDemande,
     } = useChefService();
 
     const [demandes, setDemandes] = useState<Demande[]>([]);
@@ -203,12 +202,12 @@ function MesDemandes() {
                     toast.success("Demande révoquée.");
                     break;
                 }
-                case "delete": {
-                    await deleteDemande(demandeId, chefContext);
-                    removeLocalDemande(demandeId);
-                    toast.success("Demande supprimée.");
-                    break;
-                }
+                // case "delete": {
+                //     await deleteDemande(demandeId, chefContext);
+                //     removeLocalDemande(demandeId);
+                //     toast.success("Demande supprimée.");
+                //     break;
+                // }
                 default:
                     break;
             }
@@ -227,9 +226,6 @@ function MesDemandes() {
         );
     };
 
-    const removeLocalDemande = (id: string) => {
-        setDemandes((prev) => prev.filter((demande) => demande.id_demande !== id));
-    };
 
     const renderStatusBadge = (status: DemandeStatus) => {
         const style =
@@ -269,11 +265,11 @@ function MesDemandes() {
                         </button>
                     </TooltipWrapper>
                 )}
-                <TooltipWrapper id="delete" content="Supprimer">
+                {/* <TooltipWrapper id="delete" content="Supprimer">
                     <button onClick={() => openModal("delete", demande)} className="hover:text-[#27a082] cursor-pointer">
                         🗑
                     </button>
-                </TooltipWrapper>
+                </TooltipWrapper> */}
             </div>
         );
     };
@@ -334,7 +330,13 @@ function MesDemandes() {
                         </tr>
                     </thead>
                     <tbody>
-                        {demandes.map((demande) => (
+                        {demandes
+                            .filter((demande) =>
+                                ["APPROUVEE", "EN_ATTENTE"].includes(
+                                    (demande.statut_demande ?? "").toUpperCase()
+                                )
+                            )
+                            .map((demande) => (
                             <tr
                                 key={demande.id_demande}
                                 className="group border-b border-gray-100 hover:bg-gray-50 transition-colors"
@@ -372,7 +374,11 @@ function MesDemandes() {
                                 })()}
                             </tr>
                         ))}
-                        {!demandes.length && (
+                        {!demandes.filter((demande) =>
+                            ["APPROUVEE", "EN_ATTENTE"].includes(
+                                (demande.statut_demande ?? "").toUpperCase()
+                            )
+                        ).length && (
                             <tr>
                                 <td colSpan={4} className="px-6 py-4 text-sm text-gray-500">
                                     Aucune demande à afficher.
@@ -470,8 +476,8 @@ function getModalTitle(type: ModalType) {
             return "Refuser la demande";
         case "revoke":
             return "Révoquer la demande";
-        case "delete":
-            return "Supprimer la demande";
+        // case "delete":
+        //     return "Supprimer la demande";
         default:
             return "";
     }
@@ -489,8 +495,8 @@ function getModalDescription(type: ModalType, demande: Demande) {
             return `Souhaitez-vous refuser la demande « ${libelle} » de ${owner || "ce collaborateur"} ?`;
         case "revoke":
             return `Souhaitez-vous révoquer la demande « ${libelle} » de ${owner || "ce collaborateur"} ?`;
-        case "delete":
-            return `Souhaitez-vous supprimer définitivement la demande « ${libelle} » de ${owner || "ce collaborateur"} ?`;
+        // case "delete":
+        //     return `Souhaitez-vous supprimer définitivement la demande « ${libelle} » de ${owner || "ce collaborateur"} ?`;
         default:
             return "";
     }
