@@ -29,6 +29,15 @@ class ChefService {
     }
 
     /**
+     * Récupérer l'historique des demandes (terminées / refusées) du chef
+     */
+    async getHistoriqueDemandes() {
+        return Http(ENDPOINTS_CHEFDESERVICE.getHistoriqueDemandes, {
+            method: 'GET',
+        });
+    }
+
+    /**
      * Approuver une demande
      */
     async approveDemande(demandeId: string, chef: ChefActionPayload, payload: ApproveDemandePayload) {

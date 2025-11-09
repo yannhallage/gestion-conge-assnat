@@ -7,4 +7,5 @@ export const ENDPOINTS_CHEFDESERVICE = {
   deleteDemande: (id: string) => `/chef/demandes/${id}`,           // DELETE : Supprimer une demande
   getServicePersonnel: (serviceId: string) => `/chef/personnel/${serviceId}`, // GET : Consulter le personnel du service
   addDiscussion: (demandeId: string) => `/chef/demandes/${demandeId}/discussions`, // POST : Ajouter discussion à une demande
+  getHistoriqueDemandes: '/chef/historique-demandes', // GET : Historique des demandes (terminées/refusées) du chef
 };
