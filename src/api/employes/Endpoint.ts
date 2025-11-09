@@ -9,6 +9,9 @@ export const ENDPOINTS_EMPLOYE = {
     // Types de congé
     getTypesConge: '/user/types-conge',                     // GET : récupérer tous les types de congé actifs
 
+    // Historique
+    getHistoriqueDemandes: '/user/historique-demandes',
+
     // (Pour les futures fonctionnalités)
     // createPeriodeConge: '/user/periodes-conge',          // POST : créer une période de congé
 };

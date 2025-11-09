@@ -1,20 +1,58 @@
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
+import type { CreateDirectionForm, Direction } from '../../types/validation.dto';
+import { useRhService } from "../../hooks/rh/useRhService";
+import { toast } from "sonner";
 
 interface DrawerProps {
     isOpen: boolean;
     onClose: () => void;
+    onCreated?: (direction: Direction) => void;
+}
+interface PrimaryComponentProps {
+    formData: CreateDirectionForm;
+    onChange: (field: keyof CreateDirectionForm, value: string) => void;
 }
 
-export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
+
+interface ContactComponentProps {
+    formData: CreateDirectionForm;
+    onChange: (field: keyof CreateDirectionForm, value: string) => void;
+}
+
+interface AdministrationComponentProps {
+    formData: CreateDirectionForm;
+    onChange: (field: keyof CreateDirectionForm, value: string) => void;
+}
+
+export default function DrawerAddDirection({ isOpen, onClose, onCreated }: DrawerProps) {
     const [sendInvitation, setSendInvitation] = useState(false);
     const [activeTab, setActiveTab] = useState("Primary");
-    const [loading, setLoading] = useState(false);
+    const [loadings, setLoadings] = useState(false);
+    const { createDirection } = useRhService();
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    const [formData, setFormData] = useState<CreateDirectionForm>({
+        nom_direction: "",
+        nom_directeur: "",
+        code_direction: "",
+        email_direction: "",
+        numero_direction: "",
+        business_email: "",
+        business_phone: "",
+        directeur_email: "",
+        directeur_phone: "",
+        nombre_bureau: "",
+        nombre_service: "",
+        motif_creation: "",
+        statut: 'ACTIF',
+    });
 
     useEffect(() => {
         if (isOpen) {
-            setLoading(true);
-            const timer = setTimeout(() => setLoading(false), 700);
+            setLoadings(true);
+            const timer = setTimeout(() => setLoadings(false), 700);
             return () => clearTimeout(timer);
         }
     }, [isOpen]);
@@ -28,11 +66,11 @@ export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
     const renderComponent = () => {
         switch (activeTab) {
             case "Primary":
-                return <PrimaryComponent />;
+                return <PrimaryComponent formData={formData} onChange={handleChange} />;
             case "Contact":
-                return <ContactComponent />;
+                return <ContactComponent formData={formData} onChange={handleChange} />;
             case "Administration":
-                return <AdministrationComponent />;
+                return <AdministrationComponent formData={formData} onChange={handleChange} />;
             default:
                 return null;
         }
@@ -42,6 +80,74 @@ export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
         setActiveTab("Primary");
         setSendInvitation(false);
         onClose();
+    };
+
+    const handleChange = (field: keyof CreateDirectionForm, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = async () => {
+        if (!validateForm()) return;
+
+        try {
+            setSubmitLoading(true);
+            setSubmitError(null);
+            const res = await createDirection(formData);
+            toast.success("Direction enregistrée avec succès !");
+            if (onCreated && res) {
+                onCreated(res as Direction);
+            }
+            handleClose();
+        } catch (err: any) {
+            console.error(err);
+            const message = err?.message || "Une erreur est survenue lors de l'enregistrement";
+            setSubmitError(message);
+            toast.error(message);
+        }
+        finally {
+            setSubmitLoading(false);
+        }
+    };
+
+    const validateForm = () => {
+        const requiredFields: (keyof CreateDirectionForm)[] = [
+            "nom_direction",
+            "code_direction",
+            "email_direction",
+            "numero_direction",
+            "business_email",
+            "business_phone",
+            "directeur_email",
+            "directeur_phone",
+            "nombre_bureau",
+            "nombre_service",
+            "motif_creation",
+        ];
+
+        for (const field of requiredFields) {
+            if (!formData[field] || formData[field].trim() === "") {
+                alert(`Le champ "${field}" est requis !`);
+                return false;
+            }
+        }
+
+        // Optionnel : validation email
+        const emailFields: (keyof CreateDirectionForm)[] = [
+            "email_direction",
+            "business_email",
+            "directeur_email",
+        ];
+
+        for (const field of emailFields) {
+            const value = formData[field] ?? "";
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                alert(`Le champ "${field}" doit être un email valide !`);
+                return false;
+            }
+        }
+
+        return true;
     };
 
     return (
@@ -58,8 +164,11 @@ export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
             >
                 <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button className="bg-[#27a082] hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors">
-                            ✓ Save
+                        <button
+                            onClick={handleSubmit}
+                            disabled={submitLoading}
+                            className="bg-[#27a082] cursor-pointer hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                            {submitLoading ? "Enregistrement..." : "✓ Save"}
                         </button>
                         <h1 className="text-xl font-normal text-gray-700">Nouvelle direction</h1>
                     </div>
@@ -82,11 +191,11 @@ export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
                 </header>
 
                 <div className="flex h-full overflow-hidden relative">
-                    {loading && (
+                    {loadings && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white z-50">
                             <ClipLoader
                                 color="#27a082"
-                                loading={loading}
+                                loading={loadings}
                                 size={40}
                                 speedMultiplier={3}
                                 aria-label="Chargement..."
@@ -113,54 +222,63 @@ export default function DrawerAddDirection({ isOpen, onClose }: DrawerProps) {
                     </aside>
                     <main className="flex-1 p-8 overflow-y-auto">{renderComponent()}</main>
                 </div>
+                {submitError && (
+                    <div className="px-8 pb-4 text-sm text-red-500">
+                        {submitError}
+                    </div>
+                )}
             </div>
         </>
     );
 }
 
 
-function PrimaryComponent() {
+function PrimaryComponent({ formData, onChange }: PrimaryComponentProps) {
+    const primaryFields: { label: string; field: keyof CreateDirectionForm; type?: string }[] = [
+        { label: "Nom de la direction", field: "nom_direction" },
+        { label: "Nom du directeur", field: "nom_directeur" },
+        { label: "Code direction", field: "code_direction" },
+        { label: "Email", field: "email_direction", type: "email" },
+    ];
+
+    const identificationFields: { label: string; field: keyof CreateDirectionForm; type?: string }[] = [
+        { label: "Numero direction", field: "numero_direction" },
+    ];
+
     return (
         <>
             <div className="bg-white space-y-5">
-                <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">Primary</h2>
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Primary</h2>
                 <div className="space-y-5">
-                    {[
-                        "Nom de la direction",
-                        "Code direction",
-                        "Email",
-                        // "Gender",
-                        // "Birthdate",
-                    ].map((label, i) => (
-                        <div key={i} className="flex items-center justify-between gap-6">
-                            <label className="w-1/3 text-[#abb2b9]">
-                                {label}*
-                            </label>
+                    {primaryFields.map(({ label, field, type = "text" }) => (
+                        <div key={field} className="flex items-center justify-between gap-6">
+                            <label className="w-1/3 text-[#abb2b9]">{label}*</label>
                             <input
-                                type="text"
+                                type={type}
                                 placeholder={`Entrer ${label.toLowerCase()}`}
+                                value={formData[field] || ""}
+                                onChange={(e) => onChange(field, e.target.value)}
                                 className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                           focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                             />
                         </div>
                     ))}
                 </div>
             </div>
+
             <div className="bg-white space-y-5">
                 <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Identification</h2>
                 <div className="space-y-5">
-                    {[
-                        "Numero direction",
-                    ].map((label, i) => (
-                        <div key={i} className="flex items-center justify-between gap-6">
-                            <label className="w-1/3 text-[#abb2b9]">
-                                {label}*
-                            </label>
+                    {identificationFields.map(({ label, field, type = "text" }) => (
+                        <div key={field} className="flex items-center justify-between gap-6">
+                            <label className="w-1/3 text-[#abb2b9]">{label}*</label>
                             <input
-                                type="text"
+                                type={type}
                                 placeholder={`Entrer ${label.toLowerCase()}`}
+                                value={formData[field] || ""}
+                                onChange={(e) => onChange(field, e.target.value)}
                                 className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                           focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                             />
                         </div>
                     ))}
@@ -170,85 +288,89 @@ function PrimaryComponent() {
     );
 }
 
-function ContactComponent() {
+function ContactComponent({ formData, onChange }: ContactComponentProps) {
+    const professionalFields: { label: string; field: keyof CreateDirectionForm }[] = [
+        { label: "Business email", field: "business_email" },
+        { label: "Business phone", field: "business_phone" },
+    ];
+
+    const directorFields: { label: string; field: keyof CreateDirectionForm }[] = [
+        { label: "directeur email", field: "directeur_email" },
+        { label: "directeur phone", field: "directeur_phone" },
+    ];
+
+    const directionFields: { label: string; field: keyof CreateDirectionForm; type?: string }[] = [
+        { label: "nombre de bureau", field: "nombre_bureau" },
+        { label: "nombre de service", field: "nombre_service" },
+        { label: "motif de creation", field: "motif_creation" },
+    ];
+
+    const renderField = (label: string, field: keyof CreateDirectionForm) => {
+        if (label === "motif de creation") {
+            return (
+                <textarea
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                    value={formData[field] || ""}
+                    onChange={(e) => onChange(field, e.target.value)}
+                    className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700
+                     focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                />
+            );
+        }
+        return (
+            <input
+                type="text"
+                placeholder={`Enter ${label.toLowerCase()}`}
+                value={formData[field] || ""}
+                onChange={(e) => onChange(field, e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700
+                   focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+            />
+        );
+    };
+
     return (
-        <>
-            <div className="space-y-3">
-                <div className="bg-white space-y-5">
-                    <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">informations professionlle</h2>
-                    <div className="space-y-5">
-                        {[
-                            "Business email",
-                            "Business phone"
-                        ].map((label, i) => (
-                            <div key={i} className="flex items-center justify-between gap-6">
-                                <label className="w-1/3 text-[#abb2b9]">
-                                    {label}*
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder={`Enter ${label.toLowerCase()}`}
-                                    className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="bg-white space-y-5">
-                    <h2 className="text-[15px]  font-semibold text-gray-800 pb-2">directeur</h2>
-                    <div className="space-y-5">
-                        {[
-                            "directeur email",
-                            "directeur phone",
-                        ].map((label, i) => (
-                            <div key={i} className="flex items-center justify-between gap-6">
-                                <label className="w-1/3 text-[#abb2b9]">
-                                    {label}*
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder={`Enter ${label.toLowerCase()}`}
-                                    className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                <div className="bg-white space-y-5">
-                    <h2 className="text-[15px] font-semibold text-gray-800 pb-2">direction</h2>
-                    <div className="space-y-5">
-                        {[
-                            "nombre de bureau",
-                            "nombre de service",
-                            "motif de creation",
-                        ].map((label, i) => (
-                            <div key={i} className="flex items-center justify-between gap-6">
-                                <label className="w-1/3 text-[#abb2b9]">
-                                    {label}*
-                                </label>
-                                {label === 'motif de creation' ? (
-                                    <textarea id="txtArea" placeholder={`Enter ${label.toLowerCase()}`} className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"></textarea>
-                                ) : (
-                                        <input
-                                            type="text"
-                                            placeholder={`Enter ${label.toLowerCase()}`}
-                                            className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                                        />
-                                )}
-                            </div>
-                        ))}
-                    </div>
+        <div className="space-y-3">
+            <div className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">informations professionlle</h2>
+                <div className="space-y-5">
+                    {professionalFields.map(({ label, field }) => (
+                        <div key={field} className="flex items-center justify-between gap-6">
+                            <label className="w-1/3 text-[#abb2b9]">{label}*</label>
+                            {renderField(label, field)}
+                        </div>
+                    ))}
                 </div>
             </div>
-        </>
+
+            <div className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">directeur</h2>
+                <div className="space-y-5">
+                    {directorFields.map(({ label, field }) => (
+                        <div key={field} className="flex items-center justify-between gap-6">
+                            <label className="w-1/3 text-[#abb2b9]">{label}*</label>
+                            {renderField(label, field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">direction</h2>
+                <div className="space-y-5">
+                    {directionFields.map(({ label, field }) => (
+                        <div key={field} className="flex items-center justify-between gap-6">
+                            <label className="w-1/3 text-[#abb2b9]">{label}*</label>
+                            {renderField(label, field)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 }
 
-function AdministrationComponent() {
+function AdministrationComponent({ formData, onChange }: AdministrationComponentProps) {
     const roles = [
         {
             name: "Administrator",
@@ -280,6 +402,18 @@ function AdministrationComponent() {
 
     return (
         <div className="bg-white space-y-6">
+            <div>
+                <h2 className="text-sm font-semibold text-gray-700 mb-2">Statut de la direction</h2>
+                <select
+                    value={formData.statut || "ACTIF"}
+                    onChange={(e) => onChange("statut", e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                >
+                    <option value="ACTIF">Actif</option>
+                    <option value="INACTIF">Inactif</option>
+                </select>
+            </div>
+
             <h2 className="font-semibold text-gray-700">
                 Sélectionnez si l'utilisateur aura l'un des rôles suivants dans le système
             </h2>

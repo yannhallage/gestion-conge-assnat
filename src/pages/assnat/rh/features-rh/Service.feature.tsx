@@ -1,32 +1,69 @@
 
 import { Tooltip } from "react-tooltip";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import '../css/scroll.css'
 import DrawerSeeServiceData from "../../../../components/admin/Drawer-see-service-data";
 import DrawerAddService from "../../../../components/admin/Drawer-add-service";
 import { motion } from "framer-motion";
+import { useRhService } from "../../../../hooks/rh/useRhService";
+import { ClipLoader } from "react-spinners";
+import type { Direction, Service } from "../../../../types/validation.dto";
 
 
 
 export default function ServicesFeatures() {
-    const [isOpen, setIsOpen] = useState(false)
-    const [isOpenConsultez, setIsOpenConsultez] = useState(false)
-    const [active, setActive] = useState<number>()
-    const donneeDefault = [
-        { id: 1, nom: "service du courier" },
-        { id: 2, nom: 'service protocole et logistique' },
-        { id: 3, nom: 'service systeme informatique et documentation' },
-        { id: 5, nom: 'service des affaires etrangeres' },
-        { id: 6, nom: 'service des ressources humaine' },
-        { id: 7, nom: 'service sante' },
-    ]
-    const OnclickDemandes = () => {
-        setIsOpen(true)
-    }
-    const OnclickDemandesConsultez = (id: number) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isOpenConsultez, setIsOpenConsultez] = useState(false);
+    const [active, setActive] = useState<string | null>(null);
+    const [services, setServices] = useState<Service[]>([]);
+    const [directions, setDirections] = useState<Direction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const { getAllServices, getAllDirections } = useRhService();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const [servicesRes, directionsRes] = await Promise.all([
+                    getAllServices(),
+                    getAllDirections(),
+                ]);
+                setServices(Array.isArray(servicesRes) ? servicesRes : []);
+                setDirections(Array.isArray(directionsRes) ? directionsRes : []);
+            } catch (err: any) {
+                setError(err?.message || "Erreur lors du chargement des services.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [getAllServices, getAllDirections]);
+
+    const servicesCountLabel = useMemo(() => {
+        if (!services.length) {
+            return "Aucun service trouvé";
+        }
+
+        return `${services.length} service${services.length > 1 ? "s" : ""}`;
+    }, [services.length]);
+
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+    const handleSelectService = (id: string) => {
+        const service = services.find((item) => item.id_service === id) ?? null;
         setActive(id);
-        setIsOpenConsultez(true)
-    }
+        setIsOpenConsultez(true);
+        setSelectedService(service);
+    };
+
+    const OnclickDemandes = () => {
+        setIsOpen(true);
+    };
+
     return (
         <motion.div className="min-h-screen bg-white text-gray-700"
             initial={{ opacity: 0, x: -12 }}
@@ -56,42 +93,61 @@ export default function ServicesFeatures() {
                     <span className="text-[#ccc]">Statut: <span className="font-medium text-[#555]">Actif</span></span>
                 </div>
                 <button className="text-[#27a082] font-medium cursor-pointer">+ AJOUTER UN FILTRE</button>            </div>
-            <div className="px-6 py-2 text-sm text-gray-500">{donneeDefault.length ? `${donneeDefault.length} services` : ''}</div>
+            <div className="px-6 py-2 text-sm text-gray-500">{servicesCountLabel}</div>
             <div className="">
-                <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
-                    {donneeDefault.length > 0 && (
-                        donneeDefault.map((e) => (
-                            <div
-                                key={e.id}
-                                className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === e.id ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
-                                onClick={() => OnclickDemandesConsultez(e.id)}
-                            >
-                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
-                                    S
-                                </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="font-medium">{e.nom}</div>
-                                    <div className="text-sm text-gray-500">
-                                        contact.devhllg@gmail.com
+                {loading ? (
+                    <div className="flex items-center justify-center py-10 text-gray-500">
+                        <ClipLoader size={18} color="#27a082" />
+                        <span className="ml-2 text-sm">Chargement des services...</span>
+                    </div>
+                ) : error ? (
+                    <p className="px-6 py-4 text-sm text-red-500">{error}</p>
+                ) : (
+                    <>
+                        <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
+                            {services.map((service) => (
+                                <div
+                                    key={service.id_service}
+                                    className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === service.id_service ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ""}`}
+                                    onClick={() => handleSelectService(service.id_service)}
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
+                                        {service.nom_service.charAt(0).toUpperCase()}
                                     </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="font-medium">{service.nom_service}</div>
+                                        <div className="text-sm text-gray-500">
+                                            {service.code_service} · {service.nb_personnel ?? 0} personne(s)
+                                        </div>
+                                    </div>
+                                    <Methode />
                                 </div>
-                                <Methode />
-                            </div>
-                        ))
-                    )}
+                            ))}
+                            {!services.length && (
+                                <p className="px-6 py-4 text-sm text-gray-500">Aucun service enregistré pour le moment.</p>
+                            )}
+                        </div>
 
-
-                </div>
-
-                <div onClick={OnclickDemandes} className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
-                    + AJOUTER UNE SERVICE
-                </div>
+                        <div onClick={OnclickDemandes} className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
+                            + AJOUTER UN SERVICE
+                        </div>
+                    </>
+                )}
             </div>
             <DrawerAddService
-                isOpen={isOpen} onClose={() => setIsOpen(false)}
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                directions={directions}
+                onCreated={(service) => {
+                    setServices((prev) => [service, ...prev.filter((s) => s.id_service !== service.id_service)]);
+                    setSelectedService(service);
+                    setActive(service.id_service);
+                }}
             />
             <DrawerSeeServiceData
-                isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
+                isOpen={isOpenConsultez}
+                onClose={() => setIsOpenConsultez(false)}
+                service={selectedService}
             />
         </motion.div>
     )

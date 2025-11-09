@@ -1,6 +1,12 @@
 import { ENDPOINTS_CHEFDESERVICE } from "../../api/chefdeservice/Endpoint";
 import { Http } from "../../api/http";
-import type { InvitePersonnelPayload, ApproveDemandePayload, RejectDemandePayload, CreateDiscussionPayload } from '../../../src/types/validation.dto'
+import type {
+    InvitePersonnelPayload,
+    ApproveDemandePayload,
+    RejectDemandePayload,
+    CreateDiscussionPayload,
+    ChefActionPayload
+} from '../../../src/types/validation.dto'
 
 class ChefService {
     /**
@@ -25,40 +31,40 @@ class ChefService {
     /**
      * Approuver une demande
      */
-    async approveDemande(demandeId: string, chefId: string, payload: ApproveDemandePayload) {
+    async approveDemande(demandeId: string, chef: ChefActionPayload, payload: ApproveDemandePayload) {
         return Http(ENDPOINTS_CHEFDESERVICE.approveDemande(demandeId), {
             method: 'PUT',
-            body: { ...payload, chef: { id_personnel: chefId } },
+            body: { ...payload, chef },
         });
     }
 
     /**
      * Refuser une demande
      */
-    async rejectDemande(demandeId: string, chefId: string, payload: RejectDemandePayload) {
+    async rejectDemande(demandeId: string, chef: ChefActionPayload, payload: RejectDemandePayload) {
         return Http(ENDPOINTS_CHEFDESERVICE.rejectDemande(demandeId), {
             method: 'PUT',
-            body: { ...payload, chef: { id_personnel: chefId } },
+            body: { ...payload, chef },
         });
     }
 
     /**
      * Révoquer une demande approuvée
      */
-    async revokeDemande(demandeId: string, chefId: string) {
+    async revokeDemande(demandeId: string, chef: ChefActionPayload) {
         return Http(ENDPOINTS_CHEFDESERVICE.revokeDemande(demandeId), {
             method: 'PUT',
-            body: { chef: { id_personnel: chefId } },
+            body: { chef },
         });
     }
 
     /**
      * Supprimer une demande
      */
-    async deleteDemande(demandeId: string, chefId: string) {
+    async deleteDemande(demandeId: string, chef: ChefActionPayload) {
         return Http(ENDPOINTS_CHEFDESERVICE.deleteDemande(demandeId), {
             method: 'DELETE',
-            body: { chef: { id_personnel: chefId } },
+            body: { chef },
         });
     }
 

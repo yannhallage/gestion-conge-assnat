@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
     addMonths,
@@ -15,6 +15,9 @@ import {
 import { fr } from "date-fns/locale";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
+import Drawer from "../../../../components/drawer";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useChefService } from "../../../../hooks/chefdeservice/useChefService";
 
 const CalendarFeatureAdmin = () => {
     const [loading, setLoading] = useState(true);
@@ -41,7 +44,7 @@ const CalendarFeatureAdmin = () => {
     return (
         <div className="h-full flex flex-col bg-white">
             <header className="border-b border-gray-200  px-5 py-3">
-                <h1 className="text-xl  text-gray-800">Calendar</h1>
+                <h1 className="text-xl  text-gray-800">Calendrier de l&apos;équipe</h1>
             </header>
             <div className="h-screen overflow-y-auto">
                 <CongeCalendar />
@@ -57,6 +60,93 @@ export default CalendarFeatureAdmin;
 function CongeCalendar() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const { user } = useAuth();
+    const chefId = user?.id ?? null;
+    const {
+        getServiceDemandes,
+        loading: serviceLoading,
+        error: serviceError,
+    } = useChefService();
+
+    const [fetching, setFetching] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [demandes, setDemandes] = useState<any[]>([]);
+    const [selectedDemande, setSelectedDemande] = useState<any | null>(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+
+    useEffect(() => {
+        if (!chefId) {
+            setDemandes([]);
+            setFetching(false);
+            setFetchError("Impossible d'identifer le chef de service.");
+            return;
+        }
+
+        let cancelled = false;
+        const fetchData = async () => {
+            try {
+                setFetching(true);
+                setFetchError(null);
+                const response = await getServiceDemandes(chefId);
+                if (cancelled) return;
+                const filtered = Array.isArray(response)
+                    ? response.filter(
+                          (demande) =>
+                              (demande?.statut_demande ?? "").toUpperCase() === "APPROUVEE"
+                      )
+                    : [];
+                setDemandes(filtered);
+            } catch (err: any) {
+                if (!cancelled) {
+                    setFetchError(err?.message || "Erreur lors du chargement des demandes de l'équipe.");
+                }
+            } finally {
+                if (!cancelled) {
+                    setFetching(false);
+                }
+            }
+        };
+
+        fetchData();
+
+    return () => {
+            cancelled = true;
+        };
+    }, [chefId, getServiceDemandes]);
+
+    const demandesByDate = useMemo(() => {
+        const map = new Map<string, any[]>();
+        for (const demande of demandes) {
+            if (!demande?.periodeConge?.date_debut || !demande?.periodeConge?.date_fin) continue;
+            const start = new Date(demande.periodeConge.date_debut);
+            const end = new Date(demande.periodeConge.date_fin);
+            if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) continue;
+            let cursor = new Date(start);
+            while (cursor <= end) {
+                const key = format(cursor, "yyyy-MM-dd");
+                const list = map.get(key) ?? [];
+                list.push(demande);
+                map.set(key, list);
+                cursor = addDays(cursor, 1);
+            }
+        }
+        return map;
+    }, [demandes]);
+
+    const dayDemandes = useMemo(() => {
+        const key = format(selectedDate, "yyyy-MM-dd");
+        return demandesByDate.get(key) ?? [];
+    }, [selectedDate, demandesByDate]);
+
+    const openDrawer = (demande: any) => {
+        setSelectedDemande(demande);
+        setDrawerOpen(true);
+    };
+
+    const closeDrawer = () => {
+        setDrawerOpen(false);
+        setSelectedDemande(null);
+    };
 
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -120,13 +210,23 @@ function CongeCalendar() {
                 const isSunday = day.getDay() === 0;
                 const isOtherMonth = !isSameMonth(day, monthStart);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
+                const dayKey = format(day, "yyyy-MM-dd");
+                const events = demandesByDate.get(dayKey) ?? [];
+                const isStart = events.some(
+                    (demande) =>
+                        format(new Date(demande.periodeConge?.date_debut ?? ""), "yyyy-MM-dd") === dayKey
+                );
+                const isEnd = events.some(
+                    (demande) =>
+                        format(new Date(demande.periodeConge?.date_fin ?? ""), "yyyy-MM-dd") === dayKey
+                );
 
                 days.push(
-                    <div
+                    <button
                         key={day.toString()}
                         onClick={() => setSelectedDate(cloneDay)}
-                        className={`h-15 flex items-center  justify-center text-sm border border-[#ccc] cursor-pointer transition-colors
-                         ${isSelected
+                        className={`group relative flex h-15 items-center justify-center border border-[#ccc] text-sm transition-colors
+                            ${isSelected
                                 ? "bg-[#27a082] text-white font-semibold"
                                 : isOtherMonth
                                     ? "bg-gray-50 text-gray-300"
@@ -138,7 +238,14 @@ function CongeCalendar() {
                             }`}
                     >
                         {format(day, "d")}
-                    </div>
+                        {events.length > 0 && (
+                            <span
+                                className={`pointer-events-none absolute inset-y-1 bg-emerald-400/40 ${
+                                    isStart ? "rounded-l-full" : ""
+                                } ${isEnd ? "rounded-r-full" : ""} left-1 right-1`}
+                            />
+                        )}
+                    </button>
                 );
                 day = addDays(day, 1);
             }
@@ -160,8 +267,27 @@ function CongeCalendar() {
         >
             <div className="flex-1">
                 {renderHeader()}
-                {renderDays()}
-                {renderCells()}
+                {serviceError && (
+                    <p className="mb-3 text-sm text-red-500">
+                        {serviceError}
+                    </p>
+                )}
+                {fetchError && (
+                    <p className="mb-3 text-sm text-red-500">
+                        {fetchError}
+                    </p>
+                )}
+                {fetching || serviceLoading ? (
+                    <div className="flex items-center justify-center py-12 text-gray-500">
+                        <ClipLoader size={24} color="#27a082" />
+                        <span className="ml-2 text-sm">Chargement des congés de l&apos;équipe...</span>
+                    </div>
+                ) : (
+                    <>
+                        {renderDays()}
+                        {renderCells()}
+                    </>
+                )}
             </div>
             <div className="w-full md:w-64 mt-6 md:mt-0 md:ml-6 space-y-3">
                 <div className="">
@@ -189,7 +315,90 @@ function CongeCalendar() {
                         <option>Présent</option>
                     </select>
                 </div>
+                <div className="pt-4">
+                    <QuotaResume demandes={demandes} />
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                    <h4 className="mb-2 text-sm font-semibold text-gray-700">
+                        Congés le {format(selectedDate, "dd MMMM yyyy", { locale: fr })}
+                    </h4>
+                    {dayDemandes.length ? (
+                        <ul className="space-y-2 text-xs text-gray-700">
+                            {dayDemandes.map((demande) => (
+                                <li key={`${demande.id_demande}-selected`} className="rounded border border-emerald-100 bg-white p-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-medium text-emerald-600">
+                                            {demande.personnel?.prenom_personnel} {demande.personnel?.nom_personnel}
+                                        </span>
+                                        <button
+                                            onClick={() => openDrawer(demande)}
+                                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+                                        >
+                                            Consulter
+                                        </button>
+                                    </div>
+                                    <p className="text-gray-500">
+                                        {format(new Date(demande.periodeConge?.date_debut ?? ""), "dd/MM/yyyy")} →{" "}
+                                        {format(new Date(demande.periodeConge?.date_fin ?? ""), "dd/MM/yyyy")}
+                                    </p>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-xs text-gray-400">Aucun congé enregistré pour cette date.</p>
+                    )}
+                </div>
             </div>
+            <Drawer isOpen={drawerOpen} onClose={closeDrawer} demande={selectedDemande ?? undefined} />
         </motion.div>
+    );
+}
+
+function QuotaResume({ demandes }: { demandes: any[] }) {
+    const QUOTA = 45;
+    const totalDays = useMemo(() => {
+        return demandes.reduce((acc, demande) => {
+            const nb = demande.periodeConge?.nb_jour ?? demande.nb_jour;
+            if (typeof nb === "number") {
+                return acc + nb;
+            }
+            const start = new Date(demande.periodeConge?.date_debut ?? "");
+            const end = new Date(demande.periodeConge?.date_fin ?? "");
+            if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) return acc;
+            const difference = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+            return acc + Math.max(difference, 0);
+        }, 0);
+    }, [demandes]);
+
+    const used = Math.min(totalDays, QUOTA);
+    const remaining = Math.max(QUOTA - totalDays, 0);
+    const usedPercent = Math.min(Math.round((used / QUOTA) * 100), 100);
+    const remainingPercent = Math.min(Math.round((remaining / QUOTA) * 100), 100);
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Jours approuvés</span>
+                    <span className="font-medium text-gray-700">
+                        {used} / {QUOTA} jours
+                    </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-emerald-100">
+                    <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${usedPercent}%` }} />
+                </div>
+            </div>
+            <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Quota restant</span>
+                    <span className="font-medium text-gray-700">
+                        {remaining} / {QUOTA} jours
+                    </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-full rounded-full bg-gray-500 transition-all" style={{ width: `${remainingPercent}%` }} />
+                </div>
+            </div>
+        </div>
     );
 }

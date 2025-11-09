@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/auth/auth.service";
 import { ClipLoader } from "react-spinners";
+import { ACCESS_TOKEN_KEY, USER_STORAGE_KEY } from "../secure/storageKeys";
 
 interface User {
     id: string;
@@ -10,6 +11,7 @@ interface User {
     nom: string;
     prenom: string;
     role: string;
+    id_service?: string;
 }
 
 interface AuthContextType {
@@ -31,8 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const navigate = useNavigate();
 
     useEffect(() => {
-        const savedToken = localStorage.getItem("access_token");
-        const savedUser = localStorage.getItem("user");
+        const savedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+        const savedUser = localStorage.getItem(USER_STORAGE_KEY);
 
         if (savedToken && savedUser) {
             try {
@@ -57,9 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             const roleMap: Record<string, "user" | "admin" | "rh" | "chef"> = {
                 EMPLOYE: "user",
-                ADMIN: "admin",
+                CHEF_SERVICE: "admin",
                 RH: "rh",
-                CHEF: "chef",
+                // CHEF_SERVICE: "chef",
             };
 
             const appRole = roleMap[response.user.role?.toUpperCase()] || "user";
@@ -70,10 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 nom: response.user.nom,
                 prenom: response.user.prenom,
                 role: appRole,
+                id_service: response.user.id_service,
             };
 
-            localStorage.setItem("access_token", response.access_token);
-            localStorage.setItem("user", JSON.stringify(userData));
+            localStorage.setItem(ACCESS_TOKEN_KEY, response.access_token);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
             setToken(response.access_token);
             setUser(userData);
 
@@ -98,7 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = () => {
-        localStorage.clear();
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(USER_STORAGE_KEY);
         setUser(null);
         setToken(null);
         navigate("/login-assnat");

@@ -57,9 +57,10 @@ class RhServiceFront {
     // Personnel
     // -----------------------------
     async createPersonnel(payload: CreatePersonnelDto) {
+        const { is_active, ...safePayload } = payload as CreatePersonnelDto & { is_active?: boolean };
         return Http(ENDPOINTS_RH.createPersonnel, {
             method: 'POST',
-            body: payload,
+            body: safePayload,
         });
     }
 
@@ -76,9 +77,10 @@ class RhServiceFront {
     }
 
     async updatePersonnel(id: string, payload: UpdatePersonnelDto) {
+        const { is_active, ...safePayload } = payload as UpdatePersonnelDto & { is_active?: boolean };
         return Http(ENDPOINTS_RH.updatePersonnel(id), {
             method: 'PUT',
-            body: payload,
+            body: safePayload,
         });
     }
 

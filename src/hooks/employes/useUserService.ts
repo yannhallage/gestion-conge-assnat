@@ -1,14 +1,16 @@
 // src/hooks/useUserService.ts
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { CreateDemandePayload, CreateDiscussionPayload } from '../../../src/types/validation.dto';
 import { userService } from "../../services/employes/user.service";
 
-export function useUserService(userId: string) {
+export function useUserService(userId: string | null | undefined) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Mettre à jour l'ID utilisateur dans le service
-    userService.setUserId(userId);
+    // Mettre à jour l'ID utilisateur dans le service dès qu'il change
+    useEffect(() => {
+        userService.setUserId(userId ?? null);
+    }, [userId]);
 
     const createDemande = useCallback(async (payload: CreateDemandePayload) => {
         try {
@@ -94,6 +96,20 @@ export function useUserService(userId: string) {
         }
     }, [userId]);
 
+    const getHistoriqueDemandes = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await userService.getHistoriqueDemandes();
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de la récupération de l'historique des demandes");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         loading,
         error,
@@ -103,5 +119,6 @@ export function useUserService(userId: string) {
         getTypesConge,
         addDiscussion,
         getDiscussions,
+        getHistoriqueDemandes,
     };
 }

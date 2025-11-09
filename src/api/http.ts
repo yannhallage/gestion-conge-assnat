@@ -1,3 +1,5 @@
+import { ACCESS_TOKEN_KEY } from "../secure/storageKeys";
+
 const BASE_URL = "http://localhost:3000";
 
 export interface RequestOptions extends RequestInit {
@@ -37,9 +39,11 @@ export const Http = async <T = any>(
             ...extraHeaders,
         };
 
-        // 🪪 Ajouter le token si fourni
-        if (options.token) {
-            headers["Authorization"] = `Bearer ${options.token}`;
+        // 🪪 Ajouter le token si fourni ou récupérer depuis le stockage
+        const tokenFromOptions = options.token;
+        const storedToken = tokenFromOptions ?? localStorage.getItem(ACCESS_TOKEN_KEY) ?? undefined;
+        if (storedToken) {
+            headers["Authorization"] = `Bearer ${storedToken}`;
         }
 
         const res = await fetch(url, {

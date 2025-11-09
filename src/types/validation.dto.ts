@@ -11,8 +11,14 @@ export interface LoginResponse {
         nom: string;
         prenom: string;
         role: string;
+        id_service: string;
     };
     redirect: string; // ✅ ajoute cette ligne
+}
+
+export interface ChangePasswordPayload {
+    current_password: string;
+    new_password: string;
 }
 
 
@@ -38,13 +44,19 @@ export interface CreateDiscussionPayload {
     heure_message?: string;
 }
 
+export interface ChefActionPayload {
+    id_personnel: string;
+    id_service: string;
+    email_travail?: string;
+}
+
 
 export interface CreateDemandePayload {
     type_demande: string;
     motif?: string;
-    id_service?: string;
+    // id_service?: string;
     id_periodeconge?: string;
-    id_chef_service?: string;
+    // id_chef_service?: string;
     date_debut: string;
     date_fin: string;
     nb_jour: number;
@@ -69,8 +81,15 @@ export interface CreateDirectionDto {
     nom_direction: string;
     nom_directeur: string;
     email_direction?: string;
+    numero_direction?: string;
+    business_email?: string;
+    business_phone?: string;
+    directeur_email?: string;
+    directeur_phone?: string;
+    nombre_bureau?: string;
+    nombre_service?: string;
+    motif_creation?: string;
     statut?: string;
-    nb_personnel?: number;
 }
 
 // -----------------------------
@@ -107,7 +126,6 @@ export interface CreatePersonnelDto {
     role_personnel: RolePersonnel;
     type_personnel: TypePersonnel;
     id_service: string;
-    is_active?: boolean;
 }
 
 export interface UpdatePersonnelDto {
@@ -120,7 +138,6 @@ export interface UpdatePersonnelDto {
     telephone_personnel?: string;
     role_personnel?: RolePersonnel;
     type_personnel?: TypePersonnel;
-    is_active?: boolean;
 }
 
 // -----------------------------
@@ -149,7 +166,33 @@ export interface Direction {
     nb_personnel: number;
     nom_directeur: string;
     email_direction: string;
+    numero_direction?: string;
+    business_email?: string;
+    business_phone?: string;
+    directeur_email?: string;
+    directeur_phone?: string;
+    nombre_bureau?: string;
+    nombre_service?: string;
+    motif_creation?: string;
     statut: "ACTIF" | "INACTIF" | string; // tu peux mettre d'autres statuts si nécessaire
     date_creation: string; // ou Date si tu convertis
     services: Service[];
+}
+
+
+export interface CreateDirectionForm {
+    id_direction?: string;
+    code_direction: string;
+    nom_direction: string;
+    nom_directeur: string;
+    email_direction?: string;
+    numero_direction?: string;
+    business_email?: string;
+    business_phone?: string;
+    directeur_email?: string;
+    directeur_phone?: string;
+    nombre_bureau?: string;
+    nombre_service?: string;
+    motif_creation?: string;
+    statut?: string;
 }

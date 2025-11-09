@@ -3,11 +3,13 @@ import { ConfirmModal } from "../components/modal-component";
 import DrawerNotifications from "../components/notificationComponent";
 import { Tooltip } from "react-tooltip";
 import DrawerAccountComponent from "../components/AccountComponent";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function SidebarWithColor() {
     const [isOpenSignOut, setIsOpenSignOut] = useState<boolean>(false)
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenDrawerAccountComponent, setIsOpenDrawerAccountComponent] = useState(false)
+    const { logout } = useAuth();
     return (
         <>
             <aside className="w-15 bg-[#27a082] text-white flex flex-col justify-between p-4">
@@ -53,7 +55,10 @@ export default function SidebarWithColor() {
                 title="vous allez vous deconnecté"
                 description="Votre session sera supprimer!!"
                 cancelText="Annuler"
-                confirm={() => setIsOpenSignOut(false)}
+                confirm={() => {
+                    logout();
+                    setIsOpenSignOut(false);
+                }}
                 cancel={() => { setIsOpenSignOut(false) }}
                 confirmText="accepter"
             />

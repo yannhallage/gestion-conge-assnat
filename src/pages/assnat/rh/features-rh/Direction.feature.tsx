@@ -14,6 +14,7 @@ export default function DirectionFeatures() {
     const [isOpenConsultez, setIsOpenConsultez] = useState(false)
     const [active, setActive] = useState<string | undefined>();
     const [directions, setDirections] = useState<Direction[]>([])
+    const [selectedDirection, setSelectedDirection] = useState<Direction | null>(null);
 
     const { loading, error, getAllDirections } = useRhService();
 
@@ -21,7 +22,6 @@ export default function DirectionFeatures() {
         const fetchDirections = async () => {
             try {
                 const res = await getAllDirections();
-                // Supposons que la réponse renvoie un tableau d'objets avec { id, nom }
                 setDirections(res || []);
             } catch (err) {
                 console.error("Erreur lors de la récupération des directions :", err);
@@ -34,10 +34,13 @@ export default function DirectionFeatures() {
     const OnclickDemandes = () => {
         setIsOpen(true)
     }
+
     const OnclickDemandesConsultez = (id_direction: string) => {
-        if (id_direction) setActive(id_direction);
-        setIsOpenConsultez(true)
-    }
+        const direction = directions.find((dir) => dir.id_direction === id_direction) || null;
+        setSelectedDirection(direction);
+        setActive(id_direction);
+        setIsOpenConsultez(true);
+    };
     return (
         <motion.div className="min-h-screen bg-white text-gray-700"
             initial={{ opacity: 0, x: -12 }}
@@ -71,7 +74,7 @@ export default function DirectionFeatures() {
             <div className="">
                 {loading && <p className="p-4 text-gray-500">
                     <ClipLoader
-                    size={12}/>
+                        size={12} />
                 </p>}
                 {error && <p className="p-4 text-red-500">{error}</p>}
                 <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
@@ -88,15 +91,14 @@ export default function DirectionFeatures() {
                                 <div className="ml-4 flex-1">
                                     <div className="font-medium">{e.nom_direction}</div>
                                     <div className="text-sm text-gray-500">
-                                        contact.devhllg@gmail.com
+                                        {/* contact.devhllg@gmail.com */}
+                                        {e.email_direction}
                                     </div>
                                 </div>
                                 <Methode />
                             </div>
                         ))
                     )}
-
-
                 </div>
 
                 <div onClick={OnclickDemandes} className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
@@ -104,10 +106,22 @@ export default function DirectionFeatures() {
                 </div>
             </div>
             <DrawerAddDirection
-                isOpen={isOpen} onClose={() => setIsOpen(false)}
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                onCreated={(direction) => {
+                    setDirections((prev) => {
+                        const alreadyExists = prev.some((d) => d.id_direction === direction.id_direction);
+                        if (alreadyExists) {
+                            return prev.map((d) => (d.id_direction === direction.id_direction ? direction : d));
+                        }
+                        return [direction, ...prev];
+                    });
+                }}
             />
             <DrawerSeeDirectionData
-                isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
+                isOpen={isOpenConsultez}
+                onClose={() => setIsOpenConsultez(false)}
+                direction={selectedDirection}
             />
         </motion.div>
     )
