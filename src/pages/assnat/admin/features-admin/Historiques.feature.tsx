@@ -145,7 +145,7 @@ function HistoriqueDemandes() {
     if (fetchError || serviceError) {
         return (
             <div className="flex h-[70vh] flex-col items-center justify-center">
-                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                <div className="border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
                     {fetchError ?? serviceError}
                 </div>
             </div>
@@ -205,7 +205,7 @@ function HistoriqueDemandes() {
 
 function HistoriqueTable({ demandes }: { demandes: HistoriqueDemande[] }) {
     return (
-        <div className="overflow-hidden border border-gray-100 bg-white shadow-sm rounded-2xl">
+        <div className="overflow-hidden border border-gray-100 bg-white shadow-sm">
             <table className="w-full table-fixed text-sm text-gray-700">
                 <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
                     <tr>
