@@ -128,6 +128,21 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
     onClose();
   };
 
+  const fullName = `${personnel?.nom_personnel ?? ""} ${personnel?.prenom_personnel ?? ""}`.trim();
+  const displayName =
+    fullName ||
+    (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim() ||
+    "Employé";
+  const primaryEmail = (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim();
+  const initials =
+    displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "E";
+
   return (
     <>
       <div
@@ -140,52 +155,88 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
         className={`fixed top-0 right-0 h-full w-[60%] bg-white shadow-xl z-50 transform transition-transform ${isOpen ? "translate-x-0" : "translate-x-full"
           } flex flex-col`}
       >
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-medium text-gray-800">
-              {personnel ? `${personnel.nom_personnel ?? ""} ${personnel.prenom_personnel ?? ""}`.trim() || "Employé" : "Employé"}
-            </h1>
-            {personnel?.email_travail && (
-              <p className="text-sm text-gray-500">{personnel.email_travail}</p>
-            )}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between gap-6">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="h-12 w-12 flex items-center justify-center rounded-full bg-[#27a082]/10 text-[#27a082] text-sm font-semibold uppercase">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-semibold text-gray-800 truncate">{displayName}</h1>
+                {typeof personnel?.is_active === "boolean" && (
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${personnel.is_active
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {personnel.is_active ? "Actif" : "Inactif"}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                {primaryEmail && <span className="truncate max-w-[220px]">{primaryEmail}</span>}
+                {personnel?.role_personnel && (
+                  <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
+                    {String(personnel.role_personnel)}
+                  </span>
+                )}
+                {personnel?.type_personnel && (
+                  <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
+                    {String(personnel.type_personnel)}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-          <button
-            className="hover:text-[#27a082] cursor-pointer disabled:text-gray-300 disabled:cursor-not-allowed flex items-center"
-            data-tooltip-id="inviter"
-            data-tooltip-content="inviter"
-            onClick={handleInvite}
-            disabled={inviteLoading || !personnel}
-          >
-            {inviteLoading ? (
-              <ClipLoader size={16} color="#27a082" />
-            ) : (
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="ui_icon_1z4c4c0lsv"
-                aria-describedby="floating-ui-wnyp241"
-              >
-                <g id="m-q/mail">
-                  <g id="Subtract">
-                    <path
-                      d="M22 7.72583C22 6.77576 20.9782 6 19.7222 6H4.2778C3.02182 6 2 6.77576 2 7.72583V7.78259L11.9951 13.5533L22 7.77695V7.72583Z"
-                      fill="currentColor"
-                    ></path>
-                    <path
-                      d="M22 9.45847L11.9998 15.2321L11.9951 15.2239L11.9904 15.2321L2 9.46411V17.2742C2 18.2242 3.02182 19 4.2778 19H19.7222C20.9782 19 22 18.2242 22 17.2742V9.45847Z"
-                      fill="currentColor"
-                    ></path>
-                  </g>
-                </g>
-              </svg>
-            )}
-          </button>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl">
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex items-center cursor-pointer gap-2 rounded-full border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-[#27a082] hover:border-[#27a082]/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#27a082] focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              data-tooltip-id="inviter"
+              data-tooltip-content="Envoyer une invitation"
+              onClick={handleInvite}
+              disabled={inviteLoading || !personnel}
+              title="Envoyer une invitation"
+            >
+              {inviteLoading ? (
+                <ClipLoader size={16} color="#27a082" />
+              ) : (
+                <>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="ui_icon_1z4c4c0lsv"
+                  >
+                    <g id="m-q/mail">
+                      <g id="Subtract">
+                        <path
+                          d="M22 7.72583C22 6.77576 20.9782 6 19.7222 6H4.2778C3.02182 6 2 6.77576 2 7.72583V7.78259L11.9951 13.5533L22 7.77695V7.72583Z"
+                          fill="currentColor"
+                        ></path>
+                        <path
+                          d="M22 9.45847L11.9998 15.2321L11.9951 15.2239L11.9904 15.2321L2 9.46411V17.2742C2 18.2242 3.02182 19 4.2778 19H19.7222C20.9782 19 22 18.2242 22 17.2742V9.45847Z"
+                          fill="currentColor"
+                        ></path>
+                      </g>
+                    </g>
+                  </svg>
+                  <span>Inviter</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 text-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2 rounded-full"
+              title="Fermer"
+            >
+              ✕
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto relative">

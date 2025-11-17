@@ -18,6 +18,7 @@ interface DemandeDrawerData {
         nom_personnel?: string | null;
         prenom_personnel?: string | null;
         email_travail?: string | null;
+        email_personnel?: string | null;
         telephone_travail?: string | null;
         telephone_personnel?: string | null;
     } | null;
@@ -172,8 +173,15 @@ export default function Drawer({ isOpen, onClose, demande }: DrawerProps) {
                 ? DATE_TIME_FORMATTER.format(new Date(demande.date_demande))
                 : "—";
 
-        const email = person?.email_travail || "—";
-        const phone = person?.telephone_travail || person?.telephone_personnel || "—";
+        const email =
+            [person?.email_travail, person?.email_personnel]
+                .map((value) => (typeof value === "string" ? value.trim() : ""))
+                .find((value) => value.length > 0) || "—";
+
+        const phone =
+            [person?.telephone_travail, person?.telephone_personnel]
+                .map((value) => (typeof value === "string" ? value.trim() : ""))
+                .find((value) => value.length > 0) || "—";
 
         const type =
             periode?.typeConge?.libelle_typeconge ||

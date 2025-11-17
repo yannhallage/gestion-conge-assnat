@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 
 const TurnoverByType = () => {
     const establishments = [
-        { name: 'RESTAURANT', percentage: 92, color: 'bg-red-500' },
-        { name: 'HÔTEL', percentage: 21.43, color: 'bg-red-400' },
-        { name: 'BOULANGERIE', percentage: 0, color: 'bg-gray-300' },
-        { name: 'MAGASIN', percentage: 0, color: 'bg-gray-300' }
+        { name: "Congés annuels approuvés", percentage: 68, color: "bg-emerald-500" },
+        { name: "Congés maladie en cours", percentage: 23, color: "bg-amber-400" },
+        { name: "Absences exceptionnelles", percentage: 9, color: "bg-sky-400" },
+        { name: "Demandes en attente", percentage: 14, color: "bg-gray-300" },
     ];
 
     return (

@@ -1,6 +1,6 @@
 import { ACCESS_TOKEN_KEY } from "../secure/storageKeys";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "http://localhost:3003";
 
 export interface RequestOptions extends RequestInit {
     body?: any;
