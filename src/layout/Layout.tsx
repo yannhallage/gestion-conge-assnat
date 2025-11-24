@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import SidebarWithColor from '../layout/SidebarWithColor';
+import SidebarWithColor from '../layout/sidebarWithColor';
 import SidebarCenter from './sidebarCenter';
 
 
