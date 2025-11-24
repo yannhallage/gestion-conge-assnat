@@ -14,6 +14,8 @@ interface ConfirmModalProps {
     confirm?: () => void;
     confirmText?: string;
     cancelText?: string;
+    loading?: boolean;
+    children?: React.ReactNode;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -21,13 +23,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     title,
     description,
     cancel,
-    // confirm,
+    confirm,
     cancelText = "Annuler",
     confirmText = "Confirmer",
+    loading = false,
+    children,
 }) => {
 
     const { logout } = useAuth();
-    const handleConfirm = logout;
+    const handleConfirm = confirm ?? logout;
     return (
         <AnimatePresence>
             {isOpen && (
@@ -51,6 +55,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                             </div>
                             <h2 className="text-lg font-semibold mb-2">{title}</h2>
                             <p className="text-gray-600 text-sm mb-6">{description}</p>
+                            {children}
 
                             <div className="flex justify-end space-x-3 w-full">
                                 <button
@@ -61,9 +66,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                                 </button>
                                 <button
                                     onClick={handleConfirm}
-                                    className="px-4 py-2 bg-yellow-400 text-white font-medium hover:bg-yellow-500 transition"
+                                    disabled={loading}
+                                    className={`px-4 py-2 bg-yellow-400 text-white font-medium hover:bg-yellow-500 transition ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
                                 >
-                                    {confirmText}
+                                    {loading ? "Veuillez patienter..." : confirmText}
                                 </button>
                             </div>
                         </div>

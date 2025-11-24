@@ -1,27 +1,74 @@
 import React from "react"
 import { Tooltip } from "react-tooltip";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import '../css/scroll.css'
 
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
 import DrawerAddPersonne from "../../../../components/rh/Drawer-add-personne";
 import { motion } from "framer-motion";
+import { useRhService } from "../../../../hooks/rh/useRhService";
+import { ClipLoader } from "react-spinners";
+import type { RolePersonnel, Service, TypePersonnel } from "../../../../types/validation.dto";
+
+type PersonnelSummary = {
+    id_personnel: string;
+    nom_personnel: string;
+    prenom_personnel: string;
+    email_travail?: string;
+    role_personnel?: RolePersonnel;
+    type_personnel?: TypePersonnel;
+    id_service?: string;
+    is_active?: boolean;
+};
 
 const EmployesFeatures: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false)
-    const [isOpenConsultez, setIsOpenConsultez] = useState(false)
-    const [active, setActive] = useState<number>()
-    const donneeDefault = [
-        { id: 1, nom: "Yann", prenom: "Hallage" },
-        { id: 2, nom: 'Cedrick', prenom: 'Hamed' },
-    ]
+    const [isOpen, setIsOpen] = useState(false);
+    const [isOpenConsultez, setIsOpenConsultez] = useState(false);
+    const [active, setActive] = useState<string | null>(null);
+    const [personnels, setPersonnels] = useState<PersonnelSummary[]>([]);
+    const [services, setServices] = useState<Service[]>([]);
+    const [selectedPersonnel, setSelectedPersonnel] = useState<PersonnelSummary | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const { getAllPersonnel, getAllServices } = useRhService();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const [personnelsRes, servicesRes] = await Promise.all([
+                    getAllPersonnel(),
+                    getAllServices(),
+                ]);
+                setPersonnels(Array.isArray(personnelsRes) ? personnelsRes : []);
+                setServices(Array.isArray(servicesRes) ? servicesRes : []);
+            } catch (err: any) {
+                setError(err?.message || "Erreur lors du chargement des employés.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [getAllPersonnel, getAllServices]);
+
     const OnclickDemandes = () => {
-        setIsOpen(true)
-    }
-    const OnclickDemandesConsultez = (id: number) => {
+        setIsOpen(true);
+    };
+
+    const OnclickDemandesConsultez = (id: string) => {
+        const personnel = personnels.find((item) => item.id_personnel === id) ?? null;
         setActive(id);
-        setIsOpenConsultez(true)
-    }
+        setSelectedPersonnel(personnel);
+        setIsOpenConsultez(true);
+    };
+
+    const employesCountLabel = personnels.length
+        ? `${personnels.length} personne${personnels.length > 1 ? "s" : ""}`
+        : "Aucun employé trouvé";
+
     return (
         <motion.div className="min-h-screen bg-white text-gray-700"
             initial={{ opacity: 0, x: -12 }}
@@ -51,42 +98,65 @@ const EmployesFeatures: React.FC = () => {
                     <span className="text-[#ccc]">Statut: <span className="font-medium text-[#555]">Actif</span></span>
                 </div>
                 <button className="text-[#27a082] font-medium cursor-pointer">+ AJOUTER UN FILTRE</button>            </div>
-            <div className="px-6 py-2 text-sm text-gray-500">4 personnes</div>
+            <div className="px-6 py-2 text-sm text-gray-500">{employesCountLabel}</div>
             <div className="">
-                <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
-                    {donneeDefault.length > 0 && (
-                        donneeDefault.map((e) => (
-                            <div
-                                key={e.id}
-                                className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === e.id ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
-                                onClick={() => OnclickDemandesConsultez(e.id)} // <-- passe l'id ici
-                            >
-                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
-                                    YH
-                                </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="font-medium">{e.nom + ' ' + e.prenom}</div>
-                                    <div className="text-sm text-gray-500">
-                                        contact.devhllg@gmail.com
+                {loading ? (
+                    <div className="flex items-center justify-center py-10 text-gray-500">
+                        <ClipLoader size={18} color="#27a082" />
+                        <span className="ml-2 text-sm">Chargement des employés...</span>
+                    </div>
+                ) : error ? (
+                    <p className="px-6 py-4 text-sm text-red-500">{error}</p>
+                ) : (
+                    <>
+                        <div className="divide-y divide-[#ccc] max-h-[60vh] overflow-y-auto scroll-hidden">
+                            {personnels.map((personnel) => (
+                                <div
+                                    key={personnel.id_personnel}
+                                    className={`flex items-center hover:bg-gray-50 p-6 cursor-pointer group ${active === personnel.id_personnel ? "text-teal-600 font-medium border-l-2 border-teal-600 bg-teal-50" : ''}`}
+                                    onClick={() => OnclickDemandesConsultez(personnel.id_personnel)}
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-medium text-white">
+                                        {`${personnel.nom_personnel.charAt(0)}${personnel.prenom_personnel.charAt(0)}`.toUpperCase()}
                                     </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="font-medium">
+                                            {personnel.nom_personnel} {personnel.prenom_personnel}
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {personnel.email_travail ?? "Email non renseigné"}
+                                        </div>
+                                    </div>
+                                    <Methode />
                                 </div>
-                                <Methode />
-                            </div>
-                        ))
-                    )}
+                            ))}
+                            {!personnels.length && (
+                                <p className="px-6 py-4 text-sm text-gray-500">Aucun employé enregistré pour le moment.</p>
+                            )}
+                        </div>
 
-
-                </div>
-
-                <div onClick={OnclickDemandes}  className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
-                    + AJOUTER UNE PERSONNE
-                </div>
+                        <div onClick={OnclickDemandes} className="m-3 p-4 border text-[#27a082] border-dashed border-[#ccc] text-[13px] cursor-pointer">
+                            + AJOUTER UNE PERSONNE
+                        </div>
+                    </>
+                )}
             </div>
             <DrawerAddPersonne
-                isOpen={isOpen} onClose={() => setIsOpen(false)}
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                services={services}
+                onCreated={(personnel: any) => {
+                    if (personnel && personnel.id_personnel) {
+                        setPersonnels((prev) => [personnel, ...prev.filter((p) => p.id_personnel !== personnel.id_personnel)]);
+                        setSelectedPersonnel(personnel);
+                        setActive(personnel.id_personnel);
+                    }
+                }}
             />
             <DrawerSeePersonneData
-                isOpen={isOpenConsultez} onClose={() => setIsOpenConsultez(false)}
+                isOpen={isOpenConsultez}
+                onClose={() => setIsOpenConsultez(false)}
+                personnel={selectedPersonnel}
             />
         </motion.div>
     );

@@ -9,8 +9,8 @@ class UserService {
     /**
      * Optionnel : définir l'ID de l'utilisateur courant
      */
-    setUserId(userId: string) {
-        this.userId = userId;
+    setUserId(userId: string | null) {
+        this.userId = userId ?? null;
     }
 
     /**
@@ -74,6 +74,15 @@ class UserService {
 
         const query = `?id_personnel=${this.userId}`;
         return Http(`${ENDPOINTS_EMPLOYE.getDiscussions(demandeId)}${query}`, {
+            method: 'GET',
+        });
+    }
+
+    /**
+     * Récupérer l'historique des demandes (terminées ou refusées)
+     */
+    async getHistoriqueDemandes() {
+        return Http(ENDPOINTS_EMPLOYE.getHistoriqueDemandes, {
             method: 'GET',
         });
     }

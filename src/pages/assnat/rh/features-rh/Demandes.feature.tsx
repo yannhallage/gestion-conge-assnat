@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Tooltip } from 'react-tooltip'
 import { ClipLoader } from "react-spinners"
 import { ConfirmModal } from "../../../../components/modal-component";
-import Drawer from "../../../../components/rh/drawer";
+import Drawer, { type RhDemandeDrawerData } from "../../../../components/rh/drawer";
 
 
 const DemandesFeatureRh = () => {
@@ -79,18 +79,49 @@ export default DemandesFeatureRh;
 
 
 
+const MOCK_DEMANDES: RhDemandeDrawerData[] = [
+    {
+        id_demande: "DEM-2025-0001",
+        statut_demande: "APPROUVEE",
+        type_demande: "Congé annuel",
+        date_demande: "2025-10-01T08:30:00Z",
+        motif: "Vacances familiales programmées de longue date.",
+        nb_jour: 4,
+        personnel: {
+            nom_personnel: "Orathsa",
+            prenom_personnel: "Admin",
+            email_travail: "admin.orathsa@assnat.bj",
+            telephone_travail: "+229 01 02 03 04",
+            service: {
+                nom_service: "Ressources humaines",
+            },
+        },
+        periodeConge: {
+            date_debut: "2025-10-13",
+            date_fin: "2025-10-16",
+            nb_jour: 4,
+            typeConge: {
+                libelle_typeconge: "Congé annuel",
+            },
+        },
+        chef_service: {
+            nom_personnel: "Doe",
+            prenom_personnel: "Jane",
+        },
+    },
+];
+
 export function MesDemandes() {
     const [isOpenDelete, setIsOpenDelete] = useState(false);
-    const [isOpenDownload, setIsOpenDownload] = useState(false);
     const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);
+    const [selectedDemande, setSelectedDemande] = useState<RhDemandeDrawerData | null>(null);
 
-
-    const OnclickDemandes = () => {
-        console.log('une demande selectionnée')
-        setIsOpen(true)
-    }
+    const handleOpenDrawer = (demande: RhDemandeDrawerData) => {
+        setSelectedDemande(demande);
+        setIsOpen(true);
+    };
     return (
         <div className="p-6 font-sans text-gray-800 h-screen overflow-y-auto ">
             <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -136,95 +167,164 @@ export function MesDemandes() {
                     </thead>
 
                     <tbody>
-                        <tr className="group border-b border-gray-100 hover:bg-gray-50 transition-colors" >
-                            <td className="py-3 px-4 text-[14px] text-gray-800 cursor-pointer" onClick={OnclickDemandes}>Annual leave</td>
+                        {MOCK_DEMANDES.map((demande) => {
+                            const start = demande.periodeConge?.date_debut
+                                ? new Date(demande.periodeConge.date_debut)
+                                : null;
+                            const end = demande.periodeConge?.date_fin
+                                ? new Date(demande.periodeConge.date_fin)
+                                : null;
+                            const formatter = new Intl.DateTimeFormat("fr-FR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                            });
+                            const periodLabel =
+                                start && end
+                                    ? `${formatter.format(start)} - ${formatter.format(end)}`
+                                    : start
+                                    ? formatter.format(start)
+                                    : end
+                                    ? formatter.format(end)
+                                    : "—";
+                            const nbJourLabel =
+                                typeof demande.periodeConge?.nb_jour === "number"
+                                    ? `${demande.periodeConge.nb_jour} j`
+                                    : typeof demande.nb_jour === "number"
+                                    ? `${demande.nb_jour} j`
+                                    : "—";
+                            const status = (demande.statut_demande ?? "En attente").toUpperCase();
 
-                            <td className="py-3 px-4">
-                                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-medium px-2 py-0.5 rounded-md">
-                                    APPROUVÉ
-                                </span>
-                            </td>
-
-                            <td className="py-3 px-4 text-[14px] text-gray-800">
-                                13/10/2025 - 16/10/2025
-                            </td>
-
-                            <td className="py-3 px-4 text-[14px] text-gray-800 flex items-center justify-between">
-                                <span>4j</span>
-
-                                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-500">
-                                    <button
-                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="delete" data-tooltip-content="Supprimer"
-                                        onClick={() => setIsOpenDelete(true)}
+                            return (
+                                <tr
+                                    key={demande.id_demande}
+                                    className="group border-b border-gray-100 transition-colors hover:bg-gray-50"
+                                >
+                                    <td
+                                        className="cursor-pointer py-3 px-4 text-[14px] text-gray-800"
+                                        onClick={() => handleOpenDrawer(demande)}
                                     >
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-hrs1113"><g id="r-u/trash"><g id="Union"><path d="M15 3H9V4H4V6H20V4H15V3Z" fill="currentColor"></path><path d="M5 7H19V19C19 20.1046 18.1046 21 17 21H7C5.89545 21 5 20.1046 5 19V7Z" fill="currentColor"></path></g></g></svg>
-                                        <Tooltip id="delete" />
-                                    </button>
-                                    <button
-                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="download" data-tooltip-content="Télécharger le PDF"
-                                        onClick={() => setIsOpenDownload(true)}
-                                    >
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                clipRule="evenodd"
-                                                d="M16.8525 3H3V21H21V7.167L16.8525 3ZM12.018 18.4545L7.7775 14.214H10.215V8.7855H13.7145V14.214H16.2585L12.018 18.4545ZM15.6435 8.214V4.203L19.6305 8.214H15.6435Z"
-                                                fill="currentColor"
-                                            />
-                                        </svg>
-                                        <Tooltip id="download" />
-                                    </button>
+                                        {demande.periodeConge?.typeConge?.libelle_typeconge ??
+                                            demande.type_demande ??
+                                            "Demande"}
+                                    </td>
 
-                                    {/* Icône Annuler */}
-                                    <button title=""
-                                        className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="cancel" data-tooltip-content="Annuler la demande"
-                                        onClick={() => setIsOpenAnuler(true)}
+                                    <td className="py-3 px-4">
+                                        <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                                            {status}
+                                        </span>
+                                    </td>
+
+                                    <td
+                                        className="cursor-pointer py-3 px-4 text-[14px] text-gray-800"
+                                        onClick={() => handleOpenDrawer(demande)}
                                     >
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                clipRule="evenodd"
-                                                d="M5.7 5.7L5.7 18.3H19.2V21L5.7 21H3L3 18.3V5.7V3H5.7H19.2V5.7H5.7ZM16.5 10.65H10.2V13.35H16.5V10.65ZM21 12L16.5 7.95001V16.05L21 12Z"
-                                                fill="currentColor"
-                                            />
-                                        </svg>
-                                        <Tooltip id="cancel" />
-                                    </button>
-                                    <button
-                                        data-tooltip-id="cancel" data-tooltip-content="Révoquer" className="hover:text-[#27a082] cursor-pointer"
-                                        onClick={() => setIsOpenRevoquer(true)}
-                                    >
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                clipRule="evenodd"
-                                                d="M11.1579 12.9474C11.1579 11.5906 11.4558 10.2444 12.1912 9.27686C12.8593 8.39776 14.0781 7.57895 16.5263 7.57895H21V4H16.5263C13.1587 4 10.7986 5.19434 9.34173 7.1113C7.95205 8.93983 7.57895 11.1726 7.57895 12.9474V14.7368H4L9.36842 21L14.7368 14.7368H11.1579V12.9474Z"
-                                                fill="currentColor"
-                                            />
-                                        </svg>
-                                        <Tooltip id="Révoquer" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                                        {periodLabel}
+                                    </td>
+
+                                    <td className="flex items-center justify-between py-3 px-4 text-[14px] text-gray-800">
+                                        <span>{nbJourLabel}</span>
+
+                                        <div className="flex items-center gap-3 text-gray-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                                            <button
+                                                className="hover:text-[#27a082] cursor-pointer"
+                                                data-tooltip-id="delete"
+                                                data-tooltip-content="Supprimer"
+                                                onClick={() => setIsOpenDelete(true)}
+                                            >
+                                                <svg
+                                                    width="24"
+                                                    height="24"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="ui_icon_1z4c4c0lsv"
+                                                    aria-describedby="floating-ui-hrs1113"
+                                                >
+                                                    <g id="r-u/trash">
+                                                        <g id="Union">
+                                                            <path d="M15 3H9V4H4V6H20V4H15V3Z" fill="currentColor"></path>
+                                                            <path
+                                                                d="M5 7H19V19C19 20.1046 18.1046 21 17 21H7C5.89545 21 5 20.1046 5 19V7Z"
+                                                                fill="currentColor"
+                                                            ></path>
+                                                        </g>
+                                                    </g>
+                                                </svg>
+                                                <Tooltip id="delete" />
+                                            </button>
+                                            <button
+                                                className="hover:text-[#27a082] cursor-pointer"
+                                                data-tooltip-id="download"
+                                                data-tooltip-content="Consulter le PDF"
+                                                onClick={() => handleOpenDrawer(demande)}
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        clipRule="evenodd"
+                                                        d="M16.8525 3H3V21H21V7.167L16.8525 3ZM12.018 18.4545L7.7775 14.214H10.215V8.7855H13.7145V14.214H16.2585L12.018 18.4545ZM15.6435 8.214V4.203L19.6305 8.214H15.6435Z"
+                                                        fill="currentColor"
+                                                    />
+                                                </svg>
+                                                <Tooltip id="download" />
+                                            </button>
+                                            <button
+                                                title=""
+                                                className="hover:text-[#27a082] cursor-pointer"
+                                                data-tooltip-id="cancel"
+                                                data-tooltip-content="Annuler la demande"
+                                                onClick={() => setIsOpenAnuler(true)}
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        clipRule="evenodd"
+                                                        d="M5.7 5.7L5.7 18.3H19.2V21L5.7 21H3L3 18.3V5.7V3H5.7H19.2V5.7H5.7ZM16.5 10.65H10.2V13.35H16.5V10.65ZM21 12L16.5 7.95001V16.05L21 12Z"
+                                                        fill="currentColor"
+                                                    />
+                                                </svg>
+                                                <Tooltip id="cancel" />
+                                            </button>
+                                            <button
+                                                data-tooltip-id="cancel"
+                                                data-tooltip-content="Révoquer"
+                                                className="hover:text-[#27a082] cursor-pointer"
+                                                onClick={() => setIsOpenRevoquer(true)}
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        clipRule="evenodd"
+                                                        d="M11.1579 12.9474C11.1579 11.5906 11.4558 10.2444 12.1912 9.27686C12.8593 8.39776 14.0781 7.57895 16.5263 7.57895H21V4H16.5263C13.1587 4 10.7986 5.19434 9.34173 7.1113C7.95205 8.93983 7.57895 11.1726 7.57895 12.9474V14.7368H4L9.36842 21L14.7368 14.7368H11.1579V12.9474Z"
+                                                        fill="currentColor"
+                                                    />
+                                                </svg>
+                                                <Tooltip id="Révoquer" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
 
@@ -258,7 +358,12 @@ export function MesDemandes() {
             </div>
             
             <Drawer
-                isOpen={isOpen} onClose={() => setIsOpen(false)}
+                isOpen={isOpen}
+                onClose={() => {
+                    setIsOpen(false);
+                    setSelectedDemande(null);
+                }}
+                demande={selectedDemande ?? undefined}
             />
         </div>
     );

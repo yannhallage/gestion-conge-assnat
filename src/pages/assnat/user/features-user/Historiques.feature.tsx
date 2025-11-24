@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useAuth } from "../../../../contexts/AuthContext";
+import { useUserService } from "../../../../hooks/employes/useUserService";
 
 const HistoriquesFeature = () => {
 
@@ -31,8 +35,8 @@ const HistoriquesFeature = () => {
             <header className="border-b border-gray-200 px-5 py-3">
                 <h1 className="text-xl text-gray-800">Historiques</h1>
             </header>
-            <div className="">
-                <AucuneHistorique />
+            <div className="flex-1 overflow-y-auto">
+                <HistoriqueDemandes />
             </div>
         </div>
     );
@@ -40,10 +44,271 @@ const HistoriquesFeature = () => {
 
 export default HistoriquesFeature;
 
+type HistoriqueStatus = "TERMINEE" | "REFUSEE" | string;
+
+type HistoriqueDemande = {
+    id_demande: string;
+    statut_demande: HistoriqueStatus;
+    type_demande?: string | null;
+    motif?: string | null;
+    date_demande?: string | null;
+    nb_jour?: number | null;
+    periodeConge?: {
+        date_debut?: string | null;
+        date_fin?: string | null;
+        nb_jour?: number | null;
+        typeConge?: { libelle_typeconge?: string | null } | null;
+    } | null;
+    service?: {
+        nom_service?: string | null;
+    } | null;
+};
+
+const STATUS_STYLES: Record<string, { label: string; className: string; dot: string }> = {
+    TERMINEE: {
+        label: "Terminée",
+        className: "border-emerald-200 text-emerald-700 bg-emerald-50",
+        dot: "bg-emerald-500",
+    },
+    REFUSEE: {
+        label: "Refusée",
+        className: "border-rose-200 text-rose-700 bg-rose-50",
+        dot: "bg-rose-500",
+    },
+};
+
+const DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+});
+
+function HistoriqueDemandes() {
+    const { user } = useAuth();
+    const userId = user?.id ?? null;
+    const { getHistoriqueDemandes, error: serviceError } = useUserService(userId);
+
+    const [demandes, setDemandes] = useState<HistoriqueDemande[]>([]);
+    const [fetching, setFetching] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState<HistoriqueStatus | "ALL">("ALL");
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchData = async () => {
+            if (!userId) {
+                setFetchError("Utilisateur non identifié.");
+                setDemandes([]);
+                setFetching(false);
+                return;
+            }
+
+            try {
+                setFetching(true);
+                setFetchError(null);
+                const response = await getHistoriqueDemandes();
+                if (cancelled) return;
+
+                const mapped: HistoriqueDemande[] = Array.isArray(response)
+                    ? response.filter((demande) =>
+                          ["TERMINEE", "REFUSEE"].includes(
+                              (demande?.statut_demande ?? "").toUpperCase()
+                          )
+                      )
+                    : [];
+
+                setDemandes(mapped);
+            } catch (err: any) {
+                if (!cancelled) {
+                    setFetchError(err?.message || "Erreur lors du chargement de l'historique.");
+                }
+            } finally {
+                if (!cancelled) {
+                    setFetching(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [getHistoriqueDemandes, userId]);
+
+    const filteredDemandes = useMemo(() => {
+        return demandes.filter((demande) => {
+            const statusMatches =
+                selectedStatus === "ALL" ||
+                (demande.statut_demande ?? "").toUpperCase() === selectedStatus;
+            const search = searchTerm.trim().toLowerCase();
+            if (!search) return statusMatches;
+
+            const typeLabel =
+                demande.periodeConge?.typeConge?.libelle_typeconge ??
+                demande.type_demande ??
+                "";
+            const motif = demande.motif ?? "";
+            const service = demande.service?.nom_service ?? "";
+
+            const matchesSearch =
+                typeLabel.toLowerCase().includes(search) ||
+                motif.toLowerCase().includes(search) ||
+                service.toLowerCase().includes(search);
+
+            return statusMatches && matchesSearch;
+        });
+    }, [demandes, searchTerm, selectedStatus]);
+
+    if (fetching) {
+        return (
+            <div className="flex h-[70vh] flex-col items-center justify-center text-gray-500">
+                <ClipLoader size={26} color="#27a082" />
+                <span className="mt-3 text-sm">Chargement de votre historique…</span>
+            </div>
+        );
+    }
+
+    if (fetchError || serviceError) {
+        return (
+            <div className="flex h-[70vh] flex-col items-center justify-center">
+                <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+                    {fetchError ?? serviceError}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="px-6 py-6">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Historique des demandes</h2>
+                    <p className="text-sm text-gray-500">
+                        Retrouvez les demandes terminées ou refusées, classées par date décroissante.
+                    </p>
+                </div>
+                <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                    <input
+                        type="text"
+                        placeholder="Rechercher un type, un motif ou un service…"
+                        value={searchTerm}
+                        onChange={(event) => setSearchTerm(event.target.value)}
+                        className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 md:w-72"
+                    />
+                    <div className="flex rounded-full border border-gray-200 bg-gray-50 p-1 text-sm text-gray-600">
+                        {[
+                            { label: "Toutes", value: "ALL" as const },
+                            { label: "Terminées", value: "TERMINEE" as const },
+                            { label: "Refusées", value: "REFUSEE" as const },
+                        ].map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => setSelectedStatus(option.value)}
+                                className={`rounded-full px-4 py-1 transition ${
+                                    selectedStatus === option.value
+                                        ? "bg-emerald-500 text-white shadow-sm"
+                                        : "text-gray-600 hover:bg-white"
+                                }`}
+                                type="button"
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {filteredDemandes.length === 0 ? (
+                <AucuneHistorique />
+            ) : (
+                <HistoriqueTable demandes={filteredDemandes} />
+            )}
+        </div>
+    );
+}
+
+function HistoriqueTable({ demandes }: { demandes: HistoriqueDemande[] }) {
+    return (
+        <div className="overflow-hidden  border border-gray-100 bg-white shadow-sm">
+            <table className="w-full table-fixed text-sm text-gray-700">
+                <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                    <tr>
+                        <th className="px-5 py-3 text-left">Type</th>
+                        <th className="px-5 py-3 text-left">Période</th>
+                        <th className="px-5 py-3 text-left">Durée</th>
+                        <th className="px-5 py-3 text-left">Service</th>
+                        <th className="px-5 py-3 text-left">Créée le</th>
+                        <th className="px-5 py-3 text-left">Motif</th>
+                        <th className="px-5 py-3 text-left">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {demandes.map((demande) => {
+                        const statusKey = (demande.statut_demande ?? "").toUpperCase();
+                        const statusStyle = STATUS_STYLES[statusKey] ?? STATUS_STYLES.REFUSEE;
+                        const typeLabel =
+                            demande.periodeConge?.typeConge?.libelle_typeconge ??
+                            demande.type_demande ??
+                            "Demande de congé";
+                        const nbJour = demande.periodeConge?.nb_jour ?? demande.nb_jour ?? null;
+                        const service = demande.service?.nom_service ?? "—";
+                        const createdAt =
+                            demande.date_demande && !Number.isNaN(new Date(demande.date_demande).valueOf())
+                                ? DATE_FORMATTER.format(new Date(demande.date_demande))
+                                : "—";
+                        const start = demande.periodeConge?.date_debut
+                            ? format(new Date(demande.periodeConge.date_debut), "dd MMM yyyy", { locale: fr })
+                            : null;
+                        const end = demande.periodeConge?.date_fin
+                            ? format(new Date(demande.periodeConge.date_fin), "dd MMM yyyy", { locale: fr })
+                            : null;
+                        const periodLabel = start && end ? `${start} → ${end}` : start || end || "—";
+
+                        return (
+                            <tr
+                                key={demande.id_demande}
+                                className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors"
+                            >
+                                <td className="px-5 py-4 font-medium text-gray-800">{typeLabel}</td>
+                                <td className="px-5 py-4 text-gray-600">{periodLabel}</td>
+                                <td className="px-5 py-4 text-gray-600">
+                                    {nbJour ? `${nbJour} jour${nbJour > 1 ? "s" : ""}` : "—"}
+                                </td>
+                                <td className="px-5 py-4 text-gray-600">{service}</td>
+                                <td className="px-5 py-4 text-gray-600">{createdAt}</td>
+                                <td className="px-5 py-4 text-gray-600">
+                                    {demande.motif ? (
+                                        <div className="max-w-xs truncate" title={demande.motif}>
+                                            {demande.motif}
+                                        </div>
+                                    ) : (
+                                        "—"
+                                    )}
+                                </td>
+                                <td className="px-5 py-4">
+                                    <span
+                                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusStyle.className}`}
+                                    >
+                                        <span className={`mr-2 h-2 w-2 rounded-full ${statusStyle.dot}`} />
+                                        {statusStyle.label}
+                                    </span>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
 const AucuneHistorique = () => {
     return (
-        <motion.div className="flex  flex-col items-center justify-center h-[80vh] text-center text-gray-600"
+        <motion.div
+            className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center text-gray-600"
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.1, ease: "easeOut" }}
@@ -60,7 +325,8 @@ const AucuneHistorique = () => {
                 </h2>
             </div>
             <p className="text-sm text-gray-400 mt-2 max-w-md">
-               Il n'y a actuellement aucune demande historique. Toutes les Demandes historiques seront affichées ici.
+                Il n&apos;y a actuellement aucune demande historique. Toutes les demandes terminées ou
+                refusées apparaîtront ici.
             </p>
         </motion.div>
     );

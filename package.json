@@ -12,6 +12,7 @@
   "dependencies": {
     "@material-tailwind/react": "^2.1.10",
     "@pdftron/pdfjs-express": "^8.7.5",
+    "jspdf": "^2.5.2",
     "date-fns": "^4.1.0",
     "flowbite": "^3.1.2",
     "framer-motion": "^12.23.24",
