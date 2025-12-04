@@ -80,7 +80,8 @@ export interface CreateDirectionDto {
     code_direction: string;
     nom_direction: string;
     nom_directeur: string;
-    email_direction?: string;
+    email_direction: string; // Requis selon le backend (@IsEmail, @IsNotEmpty)
+    nb_personnel?: number; // Optionnel selon le backend (@IsOptional)
     numero_direction?: string;
     business_email?: string;
     business_phone?: string;
@@ -99,7 +100,8 @@ export interface CreateServiceDto {
     code_service: string;
     nom_service: string;
     id_direction: string;
-    nb_personnel?: number;
+    // nb_personnel et id_chefdeservice ont des valeurs par défaut dans le modèle Prisma
+    // et ne doivent pas être envoyés au backend
 }
 
 // -----------------------------
@@ -136,8 +138,13 @@ export interface UpdatePersonnelDto {
     matricule_personnel?: string;
     telephone_travail?: string;
     telephone_personnel?: string;
+    ville_personnel?: string;
+    adresse_personnel?: string;
+    codepostal?: string;
+    pays_personnel?: string;
     role_personnel?: RolePersonnel;
     type_personnel?: TypePersonnel;
+    is_active?: boolean;
 }
 
 // -----------------------------
@@ -181,11 +188,12 @@ export interface Direction {
 
 
 export interface CreateDirectionForm {
-    id_direction?: string;
+    id_direction?: string; // Pour l'édition, pas dans le DTO backend
     code_direction: string;
     nom_direction: string;
     nom_directeur: string;
-    email_direction?: string;
+    email_direction: string; // Requis selon le backend (@IsEmail, @IsNotEmpty)
+    nb_personnel?: number; // Optionnel selon le backend (@IsOptional)
     numero_direction?: string;
     business_email?: string;
     business_phone?: string;

@@ -117,19 +117,61 @@ export function MesDemandes() {
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);
     const [selectedDemande, setSelectedDemande] = useState<RhDemandeDrawerData | null>(null);
+    const [refreshLoading, setRefreshLoading] = useState(false);
 
     const handleOpenDrawer = (demande: RhDemandeDrawerData) => {
         setSelectedDemande(demande);
         setIsOpen(true);
     };
+
+    const handleRefresh = async () => {
+        setRefreshLoading(true);
+        // TODO: Implémenter le fetch des demandes quand l'API sera disponible
+        // Pour l'instant, simulation d'un délai
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setRefreshLoading(false);
+    };
+
     return (
         <div className="p-6 font-sans text-gray-800 h-screen overflow-y-auto ">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-                <input
-                    type="text"
-                    placeholder="Recherche de demande"
-                    className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
-                />
+            <div className="flex flex-wrap items-center gap-3 mb-6 justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    <input
+                        type="text"
+                        placeholder="Recherche de demande"
+                        className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
+                    />
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    disabled={refreshLoading}
+                    className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Rafraîchir les données"
+                >
+                    {refreshLoading ? (
+                        <>
+                            <ClipLoader size={14} color="#27a082" />
+                            <span>Chargement...</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+                            >
+                                <path 
+                                    d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+                                    fill="currentColor"
+                                />
+                            </svg>
+                            <span>Rafraîchir</span>
+                        </>
+                    )}
+                </button>
 
                 <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 gap-2 text-sm text-gray-700 rounded border-[#ccc] px-3 py-2">
                     <span className="text-gray-500 "><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/date"><g id="Frame 4"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M8 3H6V5H5.11765C3.9481 5 3 5.95513 3 7.13333V18.8667C3 20.0449 3.9481 21 5.11765 21H18.8824C20.0519 21 21 20.0449 21 18.8667V7.13333C21 5.95513 20.0519 5 18.8824 5H18V3H16V5H8V3ZM5.11765 18.8667L5.11765 11H18.8824V18.8667H5.11765ZM7 16V14H9V16H7ZM11 14H13V16H11V14Z" fill="currentColor"></path></g></g></svg></span>

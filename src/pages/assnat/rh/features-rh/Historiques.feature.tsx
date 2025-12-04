@@ -28,8 +28,9 @@ const HistoriquesFeatureAdmin = () => {
 
     return (
         <div className="h-full flex flex-col bg-white">
-            <header className="border-b border-gray-200 px-5 py-3">
+            <header className="border-b border-gray-200 px-5 py-3 flex items-center justify-between">
                 <h1 className="text-xl text-gray-800">Historiques</h1>
+                <RefreshButton />
             </header>
             <div className="">
                 <AucuneHistorique />
@@ -40,6 +41,51 @@ const HistoriquesFeatureAdmin = () => {
 
 export default HistoriquesFeatureAdmin;
 
+
+const RefreshButton = () => {
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
+    const handleRefresh = async () => {
+        setRefreshLoading(true);
+        // TODO: Implémenter le fetch des historiques quand l'API sera disponible
+        // Pour l'instant, simulation d'un délai
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setRefreshLoading(false);
+    };
+
+    return (
+        <button
+            onClick={handleRefresh}
+            disabled={refreshLoading}
+            className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Rafraîchir les données"
+        >
+            {refreshLoading ? (
+                <>
+                    <ClipLoader size={14} color="#27a082" />
+                    <span>Chargement...</span>
+                </>
+            ) : (
+                <>
+                    <svg 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+                    >
+                        <path 
+                            d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+                            fill="currentColor"
+                        />
+                    </svg>
+                    <span>Rafraîchir</span>
+                </>
+            )}
+        </button>
+    );
+};
 
 const AucuneHistorique = () => {
     return (

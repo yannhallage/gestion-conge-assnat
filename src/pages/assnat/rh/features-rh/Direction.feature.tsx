@@ -1,6 +1,6 @@
 
 import { Tooltip } from "react-tooltip";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import '../css/scroll.css'
 import DrawerSeeDirectionData from "../../../../components/admin/Drawer-see-direction-data";
 import DrawerAddDirection from "../../../../components/admin/Drawer-add-direction";
@@ -17,19 +17,27 @@ export default function DirectionFeatures() {
     const [selectedDirection, setSelectedDirection] = useState<Direction | null>(null);
 
     const { loading, error, getAllDirections } = useRhService();
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
+    const fetchDirections = useCallback(async (showRefreshLoader = false) => {
+        if (showRefreshLoader) {
+            setRefreshLoading(true);
+        }
+        try {
+            const res = await getAllDirections();
+            setDirections(res || []);
+        } catch (err) {
+            console.error("Erreur lors de la récupération des directions :", err);
+        } finally {
+            if (showRefreshLoader) {
+                setRefreshLoading(false);
+            }
+        }
+    }, [getAllDirections]);
 
     useEffect(() => {
-        const fetchDirections = async () => {
-            try {
-                const res = await getAllDirections();
-                setDirections(res || []);
-            } catch (err) {
-                console.error("Erreur lors de la récupération des directions :", err);
-            }
-        };
-
         fetchDirections();
-    }, [getAllDirections]);
+    }, [fetchDirections]);
 
     const OnclickDemandes = () => {
         setIsOpen(true)
@@ -70,7 +78,39 @@ export default function DirectionFeatures() {
                     <span className="text-[#ccc]">Statut: <span className="font-medium text-[#555]">Actif</span></span>
                 </div>
                 <button className="text-[#27a082] font-medium cursor-pointer">+ AJOUTER UN FILTRE</button>            </div>
-            <div className="px-6 py-2 text-sm text-gray-500">{directions.length ? `${directions.length} directions` : ''}</div>
+            <div className="px-6 py-2 flex items-center justify-between">
+                <span className="text-sm text-gray-500">{directions.length ? `${directions.length} directions` : ''}</span>
+                <button
+                    onClick={() => fetchDirections(true)}
+                    disabled={refreshLoading || loading}
+                    className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Rafraîchir les données"
+                >
+                    {refreshLoading ? (
+                        <>
+                            <ClipLoader size={14} color="#27a082" />
+                            <span>Chargement...</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+                            >
+                                <path 
+                                    d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+                                    fill="currentColor"
+                                />
+                            </svg>
+                            <span>Rafraîchir</span>
+                        </>
+                    )}
+                </button>
+            </div>
             <div className="">
                 {loading && <p className="p-4 text-gray-500">
                     <ClipLoader

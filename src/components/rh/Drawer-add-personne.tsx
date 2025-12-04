@@ -8,22 +8,48 @@ import type {
   RolePersonnel,
   Service,
   TypePersonnel,
+  UpdatePersonnelDto,
 } from "../../types/validation.dto";
+
+type PersonnelForEdit = {
+  id_personnel?: string;
+  nom_personnel?: string;
+  prenom_personnel?: string;
+  email_travail?: string;
+  email_personnel?: string;
+  role_personnel?: RolePersonnel | string;
+  type_personnel?: TypePersonnel | string;
+  telephone_travail?: string;
+  telephone_personnel?: string;
+  telephone_contact_urgence?: string;
+  nom_contact_urgence?: string;
+  adresse_personnel?: string;
+  ville_personnel?: string;
+  codepostal?: string;
+  pays_personnel?: string;
+  date_naissance?: string;
+  id_service?: string;
+  matricule_personnel?: string;
+};
 
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   services: Service[];
   onCreated?: (personnel: unknown) => void;
+  personnelToEdit?: PersonnelForEdit | null;
 }
 
-type PersonnelFormState = CreatePersonnelDto;
+type PersonnelFormState = CreatePersonnelDto & {
+  date_naissance?: string;
+};
 
 const ROLES: RolePersonnel[] = ["ADMIN", "RH", "CHEF_SERVICE", "EMPLOYE"];
 const TYPES: TypePersonnel[] = ["PERMANENT", "CONTRACTUEL", "STAGIAIRE"];
 
-export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated }: DrawerProps) {
-  const { createPersonnel } = useRhService();
+export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated, personnelToEdit }: DrawerProps) {
+  const { createPersonnel, updatePersonnel } = useRhService();
+  const isEditMode = !!personnelToEdit?.id_personnel;
 
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -34,11 +60,15 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
     if (isOpen) {
       setLoadingSkeleton(true);
       const timer = setTimeout(() => setLoadingSkeleton(false), 400);
-      setFormData(initialFormState(services));
+      if (isEditMode && personnelToEdit) {
+        setFormData(initialFormStateFromPersonnel(personnelToEdit, services));
+      } else {
+        setFormData(initialFormState(services));
+      }
       setError(null);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, services]);
+  }, [isOpen, services, isEditMode, personnelToEdit]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "auto";
@@ -66,11 +96,11 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
 
   const handleSubmit = async () => {
     if (!formData.nom_personnel.trim() || !formData.prenom_personnel.trim() || !formData.email_travail.trim()) {
-      setError("Merci de renseigner au minimum le nom, le prénom et l’email professionnel.");
+      setError("Merci de renseigner au minimum le nom, le prénom et l'email professionnel.");
       return;
     }
 
-    if (!formData.password || formData.password.length < 6) {
+    if (!isEditMode && (!formData.password || formData.password.length < 6)) {
       setError("Le mot de passe doit contenir au moins 6 caractères.");
       return;
     }
@@ -78,31 +108,60 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
     try {
       setSubmitting(true);
       setError(null);
-      const payload: CreatePersonnelDto = {
-        ...formData,
-        nom_personnel: formData.nom_personnel.trim(),
-        prenom_personnel: formData.prenom_personnel.trim(),
-        email_travail: formData.email_travail.trim(),
-        email_personnel: formData.email_personnel?.trim() || undefined,
-        matricule_personnel: formData.matricule_personnel?.trim() || undefined,
-        telephone_travail: formData.telephone_travail?.trim() || undefined,
-        telephone_personnel: formData.telephone_personnel?.trim() || undefined,
-        telephone_contact_urgence: formData.telephone_contact_urgence?.trim() || undefined,
-        nom_contact_urgence: formData.nom_contact_urgence?.trim() || undefined,
-        ville_personnel: formData.ville_personnel?.trim() || undefined,
-        adresse_personnel: formData.adresse_personnel?.trim() || undefined,
-        codepostal: formData.codepostal?.trim() || undefined,
-        pays_personnel: formData.pays_personnel?.trim() || undefined,
-      };
 
-      const created = await createPersonnel(payload);
-      toast.success("Personnel enregistré avec succès !");
-      if (onCreated && created) {
-        onCreated(created);
+      if (isEditMode && personnelToEdit?.id_personnel) {
+        const payload: UpdatePersonnelDto = {
+          nom_personnel: formData.nom_personnel.trim(),
+          prenom_personnel: formData.prenom_personnel.trim(),
+          email_travail: formData.email_travail.trim(),
+          email_personnel: formData.email_personnel?.trim() || undefined,
+          matricule_personnel: formData.matricule_personnel?.trim() || undefined,
+          telephone_travail: formData.telephone_travail?.trim() || undefined,
+          telephone_personnel: formData.telephone_personnel?.trim() || undefined,
+          role_personnel: formData.role_personnel,
+          type_personnel: formData.type_personnel,
+          ville_personnel: formData.ville_personnel?.trim() || undefined,
+          adresse_personnel: formData.adresse_personnel?.trim() || undefined,
+          codepostal: formData.codepostal?.trim() || undefined,
+          pays_personnel: formData.pays_personnel?.trim() || undefined,
+        };
+        console.log(payload);
+        const updated = await updatePersonnel(personnelToEdit.id_personnel, payload);
+        toast.success("Personnel modifié avec succès !");
+        if (onCreated && updated) {
+          onCreated(updated);
+        }
+      } else {
+        const payload: CreatePersonnelDto & { date_naissance?: string } = {
+          ...formData,
+          nom_personnel: formData.nom_personnel.trim(),
+          prenom_personnel: formData.prenom_personnel.trim(),
+          email_travail: formData.email_travail.trim(),
+          email_personnel: formData.email_personnel?.trim() || undefined,
+          matricule_personnel: formData.matricule_personnel?.trim() || undefined,
+          telephone_travail: formData.telephone_travail?.trim() || undefined,
+          telephone_personnel: formData.telephone_personnel?.trim() || undefined,
+          telephone_contact_urgence: formData.telephone_contact_urgence?.trim() || undefined,
+          nom_contact_urgence: formData.nom_contact_urgence?.trim() || undefined,
+          ville_personnel: formData.ville_personnel?.trim() || undefined,
+          adresse_personnel: formData.adresse_personnel?.trim() || undefined,
+          codepostal: formData.codepostal?.trim() || undefined,
+          pays_personnel: formData.pays_personnel?.trim() || undefined,
+          date_naissance: formData.date_naissance
+            ? new Date(formData.date_naissance).toISOString()
+            : undefined,
+
+        };
+
+        const created = await createPersonnel(payload);
+        toast.success("Personnel enregistré avec succès !");
+        if (onCreated && created) {
+          onCreated(created);
+        }
       }
       handleClose();
     } catch (err: any) {
-      const message = err?.message || "Impossible d'enregistrer le personnel.";
+      const message = err?.message || (isEditMode ? "Impossible de modifier le personnel." : "Impossible d'enregistrer le personnel.");
       setError(message);
       toast.error(message);
     } finally {
@@ -125,11 +184,24 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="bg-[#27a082] hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="bg-[#27a082] hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {submitting ? "Enregistrement..." : "✓ Save"}
+              {submitting ? (
+                <>
+                  <ClipLoader
+                    color="#ffffff"
+                    loading={submitting}
+                    size={16}
+                    speedMultiplier={3}
+                    aria-label="Chargement..."
+                  />
+                  <span>Enregistrement...</span>
+                </>
+              ) : (
+                "✓ Save"
+              )}
             </button>
-            <h1 className="text-xl font-normal text-gray-700">Nouvel employé</h1>
+            <h1 className="text-xl font-normal text-gray-700">{isEditMode ? "Modifier l'employé" : "Nouvel employé"}</h1>
           </div>
 
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 text-xl">
@@ -204,15 +276,40 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                     />
                   }
                 />
+                {!isEditMode && (
+                  <FormRow
+                    label="Mot de passe"
+                    required
+                    input={
+                      <input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => handleChange("password", e.target.value)}
+                        placeholder="••••••"
+                        className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                      />
+                    }
+                  />
+                )}
                 <FormRow
-                  label="Mot de passe"
-                  required
+                  label="Date de naissance"
                   input={
                     <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => handleChange("password", e.target.value)}
-                      placeholder="••••••"
+                      type="date"
+                      value={formData.date_naissance ?? ""}
+                      onChange={(e) => handleChange("date_naissance", e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Matricule"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.matricule_personnel ?? ""}
+                      onChange={(e) => handleChange("matricule_personnel", e.target.value)}
+                      placeholder="Matricule du personnel"
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
@@ -241,6 +338,58 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                       value={formData.telephone_personnel ?? ""}
                       onChange={(e) => handleChange("telephone_personnel", e.target.value)}
                       placeholder="+1 555 987 654"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+              </section>
+
+              <section className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Adresse</h2>
+                <FormRow
+                  label="Adresse"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.adresse_personnel ?? ""}
+                      onChange={(e) => handleChange("adresse_personnel", e.target.value)}
+                      placeholder="Adresse complète"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Ville"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.ville_personnel ?? ""}
+                      onChange={(e) => handleChange("ville_personnel", e.target.value)}
+                      placeholder="Ville"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Code postal"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.codepostal ?? ""}
+                      onChange={(e) => handleChange("codepostal", e.target.value)}
+                      placeholder="Code postal"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Pays"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.pays_personnel ?? ""}
+                      onChange={(e) => handleChange("pays_personnel", e.target.value)}
+                      placeholder="Pays"
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
@@ -362,9 +511,47 @@ function initialFormState(services: Service[]): PersonnelFormState {
     pays_personnel: "",
     telephone_contact_urgence: "",
     nom_contact_urgence: "",
+    date_naissance: "",
     role_personnel: "EMPLOYE",
     type_personnel: "PERMANENT",
     id_service: defaultServiceId,
+  };
+}
+
+function initialFormStateFromPersonnel(personnel: PersonnelForEdit, services: Service[]): PersonnelFormState {
+  const defaultServiceId = services[0]?.id_service ?? "";
+
+  // Formater la date de naissance pour l'input date (format YYYY-MM-DD)
+  const formatDateForInput = (dateString?: string): string => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  };
+
+  return {
+    nom_personnel: personnel.nom_personnel ?? "",
+    prenom_personnel: personnel.prenom_personnel ?? "",
+    email_travail: personnel.email_travail ?? "",
+    email_personnel: personnel.email_personnel ?? "",
+    password: "", // Pas de mot de passe en mode édition
+    matricule_personnel: personnel.matricule_personnel ?? "",
+    telephone_travail: personnel.telephone_travail ?? "",
+    telephone_personnel: personnel.telephone_personnel ?? "",
+    ville_personnel: personnel.ville_personnel ?? "",
+    adresse_personnel: personnel.adresse_personnel ?? "",
+    codepostal: personnel.codepostal ?? "",
+    pays_personnel: personnel.pays_personnel ?? "",
+    telephone_contact_urgence: personnel.telephone_contact_urgence ?? "",
+    nom_contact_urgence: personnel.nom_contact_urgence ?? "",
+    date_naissance: formatDateForInput(personnel.date_naissance),
+    role_personnel: (personnel.role_personnel as RolePersonnel) ?? "EMPLOYE",
+    type_personnel: (personnel.type_personnel as TypePersonnel) ?? "PERMANENT",
+    id_service: personnel.id_service ?? defaultServiceId,
   };
 }
 

@@ -77,7 +77,18 @@ class RhServiceFront {
     }
 
     async updatePersonnel(id: string, payload: UpdatePersonnelDto) {
-        const { is_active, ...safePayload } = payload as UpdatePersonnelDto & { is_active?: boolean };
+        const { is_active, ...restPayload } = payload as UpdatePersonnelDto & { is_active?: boolean };
+        
+        // Filtrer les propriétés undefined et les chaînes vides pour éviter les erreurs de validation du backend
+        const safePayload = Object.fromEntries(
+            Object.entries(restPayload).filter(([_, value]) => {
+                // Garder les valeurs non-undefined et non-vides (pour les strings)
+                if (value === undefined) return false;
+                if (typeof value === 'string' && value.trim() === '') return false;
+                return true;
+            })
+        ) as UpdatePersonnelDto;
+        
         return Http(ENDPOINTS_RH.updatePersonnel(id), {
             method: 'PUT',
             body: safePayload,

@@ -6,6 +6,7 @@ import type {
   TypePersonnel,
 } from "../../types/validation.dto";
 import { useChefService } from "../../hooks/chefdeservice/useChefService";
+import { useRhService } from "../../hooks/rh/useRhService";
 
 type PersonnelDetails = {
   id_personnel?: string;
@@ -16,6 +17,7 @@ type PersonnelDetails = {
   role_personnel?: RolePersonnel | string;
   type_personnel?: TypePersonnel | string;
   telephone_travail?: string;
+  matricule_personnel?: string;
   telephone_personnel?: string;
   telephone_contact_urgence?: string;
   nom_contact_urgence?: string;
@@ -23,21 +25,33 @@ type PersonnelDetails = {
   ville_personnel?: string;
   codepostal?: string;
   pays_personnel?: string;
+  date_naissance?: string;
   is_active?: boolean;
   id_service?: string;
+  nom_service?: string;
 };
 
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   personnel: PersonnelDetails | null;
+  onPersonnelUpdated?: (personnel: PersonnelDetails) => void;
 }
 
-export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: DrawerProps) {
+export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPersonnelUpdated }: DrawerProps) {
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [serviceName, setServiceName] = useState<string | null>(null);
+  // État local pour le personnel qui sera mis à jour dynamiquement
+  const [localPersonnel, setLocalPersonnel] = useState<PersonnelDetails | null>(personnel);
 
   const { invitePersonnel, loading: inviteLoading } = useChefService();
+  const { getServiceById, updatePersonnel } = useRhService();
+
+  // Synchroniser l'état local avec les props
+  useEffect(() => {
+    setLocalPersonnel(personnel);
+  }, [personnel]);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,16 +73,46 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
 
   useEffect(() => {
     setInviteFeedback(null);
+    // console.log(personnel);
   }, [personnel]);
 
+  useEffect(() => {
+    const fetchServiceName = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_service) {
+        setServiceName(null);
+        return;
+      }
+
+      try {
+        const service = await getServiceById(currentPersonnel.id_service);
+        if (service && typeof service === 'object' && 'nom_service' in service) {
+          setServiceName(service.nom_service as string);
+        } else {
+          setServiceName(null);
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération du service:", err);
+        setServiceName(null);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_service) {
+      fetchServiceName();
+    } else {
+      setServiceName(null);
+    }
+  }, [localPersonnel?.id_service, personnel?.id_service, isOpen, getServiceById]);
+
   const buildPayload = useCallback(() => {
-    if (!personnel) {
+    const currentPersonnel = localPersonnel || personnel;
+    if (!currentPersonnel) {
       return null;
     }
 
     const email =
-      (personnel.email_personnel ?? "").trim() ||
-      (personnel.email_travail ?? "").trim();
+      (currentPersonnel.email_personnel ?? "").trim() ||
+      (currentPersonnel.email_travail ?? "").trim();
 
     if (!email) {
       setInviteFeedback({
@@ -78,8 +122,8 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
       return null;
     }
 
-    const rawRole = ((personnel.role_personnel ?? "") as string).trim().toUpperCase();
-    const rawType = ((personnel.type_personnel ?? "") as string).trim().toUpperCase();
+    const rawRole = ((currentPersonnel.role_personnel ?? "") as string).trim().toUpperCase();
+    const rawType = ((currentPersonnel.type_personnel ?? "") as string).trim().toUpperCase();
 
     const allowedRoles: RolePersonnel[] = ["ADMIN", "RH", "CHEF_SERVICE", "EMPLOYE"];
     const allowedTypes: InvitePersonnelPayload["type_personnel"][] = ["PERMANENT", "CONTRACTUEL"];
@@ -93,47 +137,66 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
 
     return {
       email_personnel: email,
-      nom_personnel: (personnel.nom_personnel ?? "").trim(),
-      prenom_personnel: (personnel.prenom_personnel ?? "").trim(),
+      nom_personnel: (currentPersonnel.nom_personnel ?? "").trim(),
+      prenom_personnel: (currentPersonnel.prenom_personnel ?? "").trim(),
       role_personnel: normalizedRole,
       type_personnel: normalizedType,
     };
-  }, [personnel]);
+  }, [localPersonnel, personnel]);
 
   const handleInvite = useCallback(async () => {
     setInviteFeedback(null);
 
     const payload = buildPayload();
-    if (!payload) {
+    if (!payload || !localPersonnel?.id_personnel) {
       return;
     }
 
     try {
       await invitePersonnel(payload);
+      
+      // Activer le personnel après une invitation réussie
+      try {
+        await updatePersonnel(localPersonnel.id_personnel, { is_active: true });
+        // Mettre à jour l'état local pour refléter le changement dynamiquement
+        const updatedPersonnel = { ...localPersonnel, is_active: true };
+        setLocalPersonnel(updatedPersonnel);
+        
+        // Notifier le parent de la mise à jour
+        if (onPersonnelUpdated) {
+          onPersonnelUpdated(updatedPersonnel);
+        }
+      } catch (updateErr) {
+        console.error("Erreur lors de l'activation du personnel:", updateErr);
+      }
+      
       setInviteFeedback({
         type: "success",
-        message: "Invitation envoyée avec succès.",
+        message: "Invitation envoyée avec succès et personnel activé.",
       });
     } catch (err: any) {
       setInviteFeedback({
         type: "error",
         message:
           err?.message ??
-          "Une erreur est survenue lors de l’envoi de l’invitation.",
+          "Une erreur est survenue lors de l'envoi de l'invitation.",
       });
     }
-  }, [buildPayload, invitePersonnel]);
+  }, [buildPayload, invitePersonnel, localPersonnel, updatePersonnel]);
 
   const handleClose = () => {
     onClose();
   };
 
-  const fullName = `${personnel?.nom_personnel ?? ""} ${personnel?.prenom_personnel ?? ""}`.trim();
+  // Utiliser localPersonnel au lieu de personnel pour l'affichage dynamique
+  const currentPersonnel = localPersonnel || personnel;
+  
+  const fullName = `${currentPersonnel?.nom_personnel ?? ""} ${currentPersonnel?.prenom_personnel ?? ""}`.trim();
   const displayName =
     fullName ||
-    (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim() ||
+    (currentPersonnel?.email_travail ?? currentPersonnel?.email_personnel ?? "").trim() ||
     "Employé";
-  const primaryEmail = (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim();
+  const primaryEmail = (currentPersonnel?.email_travail ?? currentPersonnel?.email_personnel ?? "").trim();
   const initials =
     displayName
       .split(/\s+/)
@@ -163,27 +226,27 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
             <div className="min-w-0">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-semibold text-gray-800 truncate">{displayName}</h1>
-                {typeof personnel?.is_active === "boolean" && (
+                {typeof currentPersonnel?.is_active === "boolean" && (
                   <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${personnel.is_active
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${currentPersonnel.is_active
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {personnel.is_active ? "Actif" : "Inactif"}
+                    {currentPersonnel.is_active ? "Actif" : "Inactif"}
                   </span>
                 )}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                 {primaryEmail && <span className="truncate max-w-[220px]">{primaryEmail}</span>}
-                {personnel?.role_personnel && (
+                {currentPersonnel?.role_personnel && (
                   <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
-                    {String(personnel.role_personnel)}
+                    {String(currentPersonnel.role_personnel)}
                   </span>
                 )}
-                {personnel?.type_personnel && (
+                {currentPersonnel?.type_personnel && (
                   <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
-                    {String(personnel.type_personnel)}
+                    {String(currentPersonnel.type_personnel)}
                   </span>
                 )}
               </div>
@@ -196,7 +259,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
               data-tooltip-id="inviter"
               data-tooltip-content="Envoyer une invitation"
               onClick={handleInvite}
-              disabled={inviteLoading || !personnel}
+              disabled={inviteLoading || !currentPersonnel}
               title="Envoyer une invitation"
             >
               {inviteLoading ? (
@@ -253,7 +316,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
             </div>
           ) : (
             <div className="p-6 space-y-6">
-              {!personnel ? (
+              {!currentPersonnel ? (
                 <p className="text-sm text-gray-500">Sélectionnez un employé pour consulter ses informations.</p>
               ) : (
                 <>
@@ -261,38 +324,41 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                       Informations personnelles
                     </h2>
-                    <InfoRow label="Nom" value={`${personnel.nom_personnel ?? ""} ${personnel.prenom_personnel ?? ""}`.trim()} />
-                    <InfoRow label="Email professionnel" value={personnel.email_travail} />
-                    <InfoRow label="Email personnel" value={personnel.email_personnel} />
-                    <InfoRow label="Rôle" value={personnel.role_personnel} />
-                    <InfoRow label="Type" value={personnel.type_personnel} />
-                    <InfoRow label="Statut" value={personnel.is_active ? "Actif" : "Inactif"} />
+                    <InfoRow label="Nom" value={`${currentPersonnel.nom_personnel ?? ""} ${currentPersonnel.prenom_personnel ?? ""}`.trim()} />
+                    <InfoRow label="Matricule" value={currentPersonnel.matricule_personnel} />
+                    <InfoRow label="Date de naissance" value={formatDate(currentPersonnel.date_naissance)} />
+                    <InfoRow label="Email professionnel" value={currentPersonnel.email_travail} />
+                    <InfoRow label="Email personnel" value={currentPersonnel.email_personnel} />
+                    <InfoRow label="Rôle" value={currentPersonnel.role_personnel} />
+                    <InfoRow label="Type" value={currentPersonnel.type_personnel} />
+                    <InfoRow label="Service" value={serviceName || currentPersonnel.nom_service} />
+                    <InfoRow label="Statut" value={currentPersonnel.is_active ? "Actif" : "Inactif"} />
                   </section>
 
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                       Coordonnées
                     </h2>
-                    <InfoRow label="Téléphone professionnel" value={personnel.telephone_travail} />
-                    <InfoRow label="Téléphone personnel" value={personnel.telephone_personnel} />
+                    <InfoRow label="Téléphone professionnel" value={currentPersonnel.telephone_travail} />
+                    <InfoRow label="Téléphone personnel" value={currentPersonnel.telephone_personnel} />
                   </section>
 
                     <section className="space-y-3">
                       <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                         Adresse
                       </h2>
-                      <InfoRow label="Adresse" value={personnel.adresse_personnel} />
-                      <InfoRow label="Ville" value={personnel.ville_personnel} />
-                      <InfoRow label="Code postal" value={personnel.codepostal} />
-                      <InfoRow label="Pays" value={personnel.pays_personnel} />
+                      <InfoRow label="Adresse" value={currentPersonnel.adresse_personnel} />
+                      <InfoRow label="Ville" value={currentPersonnel.ville_personnel} />
+                      <InfoRow label="Code postal" value={currentPersonnel.codepostal} />
+                      <InfoRow label="Pays" value={currentPersonnel.pays_personnel} />
                     </section>
 
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                      Contact d’urgence
+                      Contact d'urgence
                     </h2>
-                    <InfoRow label="Nom" value={personnel.nom_contact_urgence} />
-                    <InfoRow label="Téléphone" value={personnel.telephone_contact_urgence} />
+                    <InfoRow label="Nom" value={currentPersonnel.nom_contact_urgence} />
+                    <InfoRow label="Téléphone" value={currentPersonnel.telephone_contact_urgence} />
                   </section>
                 </>
               )}
@@ -322,5 +388,22 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
       <span className="text-sm text-gray-800">{value?.trim() ? value : "Non renseigné"}</span>
     </div>
   );
+}
+
+function formatDate(dateString?: string): string {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
 }
 

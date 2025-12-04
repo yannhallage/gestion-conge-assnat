@@ -63,9 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 RH: "rh",
                 // CHEF_SERVICE: "chef",
             };
-
-            const appRole = roleMap[response.user.role?.toUpperCase()] || "user";
-
+            // console.log("response.user.role", response.user.role);
+            const appRole = roleMap[response.user.role.toUpperCase()] || "user";
+            console.log("appRole", appRole);
             const userData: User = {
                 id: response.user.id,
                 email_personnel: response.user.email,
@@ -80,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setToken(response.access_token);
             setUser(userData);
 
+            console.log("appRole", appRole);
             switch (appRole) {
                 case "rh":
                     navigate("/assnat-rh/dashboard");

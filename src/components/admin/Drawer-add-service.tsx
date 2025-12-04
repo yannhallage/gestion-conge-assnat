@@ -56,11 +56,12 @@ export default function DrawerAddService({ isOpen, onClose, directions, onCreate
             return;
         }
 
+        // Le backend n'accepte que code_service, nom_service et id_direction
+        // nb_personnel et id_chefdeservice ont des valeurs par défaut dans Prisma
         const payload: CreateServiceDto = {
             nom_service: formData.nom_service.trim(),
             code_service: formData.code_service.trim(),
             id_direction: formData.id_direction,
-            nb_personnel: formData.nb_personnel === "" ? undefined : formData.nb_personnel,
         };
 
         try {
@@ -211,7 +212,9 @@ function initialFormState(directions: Direction[]): ServiceFormState {
         nom_service: "",
         code_service: "",
         id_direction: directions[0]?.id_direction ?? "",
-        nb_personnel: "",
+        nb_personnel: undefined,
+        // nb_personnel: "",
+        // id_chefdeservice: "",
     };
 }
 
