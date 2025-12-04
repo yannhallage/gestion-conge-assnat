@@ -110,6 +110,20 @@ export function useUserService(userId: string | null | undefined) {
         }
     }, []);
 
+    const getDisponibilite = useCallback(async (id: string) => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await userService.getDisponibilite(id);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de la récupération de la disponibilité");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         loading,
         error,
@@ -120,5 +134,6 @@ export function useUserService(userId: string | null | undefined) {
         addDiscussion,
         getDiscussions,
         getHistoriqueDemandes,
+        getDisponibilite,
     };
 }

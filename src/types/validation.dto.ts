@@ -21,6 +21,20 @@ export interface ChangePasswordPayload {
     new_password: string;
 }
 
+export interface UpdatePasswordDto {
+    ancien_mot_de_passe: string;
+    nouveau_mot_de_passe: string;
+}
+
+export interface UpdatePersonalInfoDto {
+    telephone_travail?: string;
+    telephone_personnel?: string;
+    ville_personnel?: string;
+    telephone_contact_urgence?: string;
+    nom_contact_urgence?: string;
+    date_naissance?: string;
+}
+
 
 
 export interface ApproveDemandePayload {
@@ -142,6 +156,9 @@ export interface UpdatePersonnelDto {
     adresse_personnel?: string;
     codepostal?: string;
     pays_personnel?: string;
+    telephone_contact_urgence?: string;
+    nom_contact_urgence?: string;
+    date_naissance?: string;
     role_personnel?: RolePersonnel;
     type_personnel?: TypePersonnel;
     is_active?: boolean;

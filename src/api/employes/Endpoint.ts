@@ -12,6 +12,9 @@ export const ENDPOINTS_EMPLOYE = {
     // Historique
     getHistoriqueDemandes: '/user/historique-demandes',
 
+    // Disponibilité
+    getDisponibilite: (id: string) => `/user/disponibilite/${id}`, // GET : récupérer la disponibilité d'un utilisateur
+
     // (Pour les futures fonctionnalités)
     // createPeriodeConge: '/user/periodes-conge',          // POST : créer une période de congé
 };

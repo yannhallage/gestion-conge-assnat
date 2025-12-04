@@ -3,6 +3,8 @@ import type{ FormEvent } from "react";
 import { ClipLoader } from "react-spinners";
 import { USER_STORAGE_KEY } from "../secure/storageKeys";
 import { authService } from "../services/auth/auth.service";
+import { rhServiceFront } from "../services/rh/rh.service";
+import type { UpdatePersonalInfoDto } from "../types/validation.dto";
 
 interface DrawerProps {
     isOpen: boolean;
@@ -22,6 +24,15 @@ interface PasswordFormState {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
+}
+
+interface ProfileFormState {
+    telephone_travail: string;
+    telephone_personnel: string;
+    ville_personnel: string;
+    telephone_contact_urgence: string;
+    nom_contact_urgence: string;
+    date_naissance: string;
 }
 
 export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps) {
@@ -180,13 +191,25 @@ export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps)
                                 </div>
                             </section>
 
+                            {userData && (
+                                <section className="bg-white border border-gray-200  shadow-sm overflow-hidden">
+                                    <header className="px-6 py-4 border-b border-gray-100">
+                                        <h2 className="text-lg font-semibold text-gray-800">Modifier mes informations</h2>
+                                        <p className="text-sm text-gray-500">Mettez à jour vos informations personnelles et de contact.</p>
+                                    </header>
+                                    <div className="px-6 py-6">
+                                        <UpdateProfileForm userId={userData.id} />
+                                    </div>
+                                </section>
+                            )}
+
                             <section className="bg-white border border-gray-200  shadow-sm overflow-hidden">
                                 <header className="px-6 py-4 border-b border-gray-100">
                                     <h2 className="text-lg font-semibold text-gray-800">Modifier le mot de passe</h2>
                                     <p className="text-sm text-gray-500">Choisissez un mot de passe solide. Il doit contenir au minimum 8 caractères.</p>
                                 </header>
                                 <div className="px-6 py-6">
-                                    <ChangePasswordForm />
+                                    {userData && <ChangePasswordForm userId={userData.id} />}
                                 </div>
                             </section>
                         </div>
@@ -197,7 +220,7 @@ export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps)
     );
 }
 
-function ChangePasswordForm() {
+function ChangePasswordForm({ userId }: { userId: string }) {
     const [formState, setFormState] = useState<PasswordFormState>({
         currentPassword: "",
         newPassword: "",
@@ -224,8 +247,8 @@ function ChangePasswordForm() {
             return;
         }
 
-        if (formState.newPassword.length < 8) {
-            setFormError("Le nouveau mot de passe doit contenir au moins 8 caractères.");
+        if (formState.newPassword.length < 6) {
+            setFormError("Le nouveau mot de passe doit contenir au moins 6 caractères.");
             return;
         }
 
@@ -236,9 +259,9 @@ function ChangePasswordForm() {
 
         try {
             setSubmitting(true);
-            await authService.changePassword({
-                current_password: formState.currentPassword,
-                new_password: formState.newPassword,
+            await authService.updatePassword(userId, {
+                ancien_mot_de_passe: formState.currentPassword,
+                nouveau_mot_de_passe: formState.newPassword,
             });
 
             setFormSuccess("Votre mot de passe a été mis à jour avec succès.");
@@ -326,6 +349,206 @@ function ChangePasswordForm() {
                     </span>
                 ) : (
                     "Enregistrer"
+                )}
+            </button>
+        </form>
+    );
+}
+
+function UpdateProfileForm({ userId }: { userId: string }) {
+    const [formState, setFormState] = useState<ProfileFormState>({
+        telephone_travail: "",
+        telephone_personnel: "",
+        ville_personnel: "",
+        telephone_contact_urgence: "",
+        nom_contact_urgence: "",
+        date_naissance: "",
+    });
+    const [formError, setFormError] = useState<string | null>(null);
+    const [formSuccess, setFormSuccess] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadPersonnelData = async () => {
+            try {
+                setLoading(true);
+                const personnelData = await rhServiceFront.getPersonnelById(userId);
+                
+                setFormState({
+                    telephone_travail: personnelData?.telephone_travail || "",
+                    telephone_personnel: personnelData?.telephone_personnel || "",
+                    ville_personnel: personnelData?.ville_personnel || "",
+                    telephone_contact_urgence: personnelData?.telephone_contact_urgence || "",
+                    nom_contact_urgence: personnelData?.nom_contact_urgence || "",
+                    date_naissance: personnelData?.date_naissance ? personnelData.date_naissance.split('T')[0] : "",
+                });
+            } catch (error: any) {
+                console.error("Erreur lors du chargement des données du personnel :", error);
+                setFormError("Impossible de charger les informations. Veuillez réessayer.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (userId) {
+            loadPersonnelData();
+        }
+    }, [userId]);
+
+    const handleChange = (field: keyof ProfileFormState, value: string) => {
+        setFormState((prev) => ({
+            ...prev,
+            [field]: value,
+        }));
+    };
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setFormError(null);
+        setFormSuccess(null);
+
+        try {
+            setSubmitting(true);
+            
+            const payload: UpdatePersonalInfoDto = {};
+            if (formState.telephone_travail.trim()) payload.telephone_travail = formState.telephone_travail.trim();
+            if (formState.telephone_personnel.trim()) payload.telephone_personnel = formState.telephone_personnel.trim();
+            if (formState.ville_personnel.trim()) payload.ville_personnel = formState.ville_personnel.trim();
+            if (formState.telephone_contact_urgence.trim()) payload.telephone_contact_urgence = formState.telephone_contact_urgence.trim();
+            if (formState.nom_contact_urgence.trim()) payload.nom_contact_urgence = formState.nom_contact_urgence.trim();
+            if (formState.date_naissance.trim()) payload.date_naissance = formState.date_naissance.trim();
+
+            await authService.updatePersonalInfo(userId, payload);
+
+            setFormSuccess("Vos informations ont été mises à jour avec succès.");
+        } catch (error: any) {
+            const message = error?.message || "Une erreur est survenue lors de la mise à jour des informations.";
+            setFormError(message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-8">
+                <ClipLoader size={24} color="#27a082" speedMultiplier={1.5} />
+            </div>
+        );
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            {formError && (
+                <div className=" border border-rose-400 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {formError}
+                </div>
+            )}
+
+            {formSuccess && (
+                <div className=" border border-emerald-400 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    {formSuccess}
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="telephone_travail" className="text-sm font-medium text-gray-700">
+                        Téléphone de travail
+                    </label>
+                    <input
+                        id="telephone_travail"
+                        type="tel"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.telephone_travail}
+                        onChange={(event) => handleChange("telephone_travail", event.target.value)}
+                        placeholder="Ex: +33 1 23 45 67 89"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="telephone_personnel" className="text-sm font-medium text-gray-700">
+                        Téléphone personnel
+                    </label>
+                    <input
+                        id="telephone_personnel"
+                        type="tel"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.telephone_personnel}
+                        onChange={(event) => handleChange("telephone_personnel", event.target.value)}
+                        placeholder="Ex: +33 6 12 34 56 78"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="ville_personnel" className="text-sm font-medium text-gray-700">
+                        Ville
+                    </label>
+                    <input
+                        id="ville_personnel"
+                        type="text"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.ville_personnel}
+                        onChange={(event) => handleChange("ville_personnel", event.target.value)}
+                        placeholder="Ex: Paris"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="date_naissance" className="text-sm font-medium text-gray-700">
+                        Date de naissance
+                    </label>
+                    <input
+                        id="date_naissance"
+                        type="date"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.date_naissance}
+                        onChange={(event) => handleChange("date_naissance", event.target.value)}
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="nom_contact_urgence" className="text-sm font-medium text-gray-700">
+                        Nom du contact d'urgence
+                    </label>
+                    <input
+                        id="nom_contact_urgence"
+                        type="text"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.nom_contact_urgence}
+                        onChange={(event) => handleChange("nom_contact_urgence", event.target.value)}
+                        placeholder="Ex: Jean Dupont"
+                    />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <label htmlFor="telephone_contact_urgence" className="text-sm font-medium text-gray-700">
+                        Téléphone du contact d'urgence
+                    </label>
+                    <input
+                        id="telephone_contact_urgence"
+                        type="tel"
+                        className=" border border-gray-300 px-4 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                        value={formState.telephone_contact_urgence}
+                        onChange={(event) => handleChange("telephone_contact_urgence", event.target.value)}
+                        placeholder="Ex: +33 6 12 34 56 78"
+                    />
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center justify-center  bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+            >
+                {submitting ? (
+                    <span className="flex items-center gap-2">
+                        <ClipLoader size={16} color="#ffffff" speedMultiplier={1.5} />
+                        Mise à jour...
+                    </span>
+                ) : (
+                    "Enregistrer les modifications"
                 )}
             </button>
         </form>

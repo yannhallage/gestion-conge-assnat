@@ -86,6 +86,16 @@ class UserService {
             method: 'GET',
         });
     }
+
+    /**
+     * Récupérer la disponibilité d'un utilisateur
+     * @param id ID du personnel
+     */
+    async getDisponibilite(id: string) {
+        return Http(ENDPOINTS_EMPLOYE.getDisponibilite(id), {
+            method: 'GET',
+        });
+    }
 }
 
 // Export d’une instance singleton
