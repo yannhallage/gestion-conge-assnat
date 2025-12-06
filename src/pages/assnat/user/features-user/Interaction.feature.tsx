@@ -1,9 +1,49 @@
-// import { Info, Lightbulb, Zap, Rocket } from 'lucide-react';
 import { motion } from 'framer-motion';
-// import React from 'react';
+import { useState, useEffect } from 'react';
+import { useUserService } from '../../../../hooks/employes/useUserService';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { ClipLoader } from 'react-spinners';
+import { Calendar, MessageSquare, RefreshCw } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
+interface InteractionRh {
+    id_interaction_rh?: string;
+    titre: string;
+    message: string;
+    date?: string | null;
+    created_at?: string | null;
+}
 
 export default function InteractionUser() {
+    const { user } = useAuth();
+    const userId = user?.id ?? null;
+    const { getAllInteractionsRh, loading: serviceLoading } = useUserService(userId);
+    const [interactions, setInteractions] = useState<InteractionRh[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchInteractions();
+    }, []);
+
+    const fetchInteractions = async () => {
+        try {
+            setLoading(true);
+            const response = await getAllInteractionsRh();
+            setInteractions(Array.isArray(response) ? response : []);
+        } catch (err: any) {
+            toast.error(err?.message || "Erreur lors du chargement des interactions");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        await fetchInteractions();
+        toast.success("Interactions rafraîchies avec succès");
+    };
+
     return (
         <>
             <motion.div
@@ -11,36 +51,31 @@ export default function InteractionUser() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.1, ease: "easeOut" }}
             >
-                <header className="border-b border-gray-200 px-5 py-3">
-                    <h1 className="text-xl text-gray-800">Interaction rh</h1>
+                <header className="border-b border-gray-200 px-5 py-3 flex items-center justify-between">
+                    <h1 className="text-xl text-gray-800">Interaction RH</h1>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={loading || serviceLoading}
+                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Rafraîchir les interactions"
+                    >
+                        <RefreshCw
+                            className={`h-4 w-4 ${loading || serviceLoading ? 'animate-spin' : ''}`}
+                        />
+                        <span>Rafraîchir</span>
+                    </button>
                 </header>
-                <div className='p-3'>
-                    {/* Barre de recherche */}
-                    <div className="flex flex-wrap items-center gap-3 mb-6 ">
-                        {/* <input
-                        type="text"
-                        placeholder="Recherche de demande"
-                        className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
-                    /> */}
-
-                        <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 gap-2 text-sm text-gray-700 rounded border-[#ccc] px-3 py-2">
-                            <span className="text-gray-500 "><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/date"><g id="Frame 4"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M8 3H6V5H5.11765C3.9481 5 3 5.95513 3 7.13333V18.8667C3 20.0449 3.9481 21 5.11765 21H18.8824C20.0519 21 21 20.0449 21 18.8667V7.13333C21 5.95513 20.0519 5 18.8824 5H18V3H16V5H8V3ZM5.11765 18.8667L5.11765 11H18.8824V18.8667H5.11765ZM7 16V14H9V16H7ZM11 14H13V16H11V14Z" fill="currentColor"></path></g></g></svg></span>
-                            <span>Date: Tous</span>
-                        </button>
-
-                        <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 rounded  gap-2 text-sm text-gray-700 border-[#ccc] px-3 py-2">
-                            <span className="text-gray-500"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="r-u/status"><path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M12 22.5C17.799 22.5 22.5 17.799 22.5 12C22.5 6.20101 17.799 1.5 12 1.5C6.20101 1.5 1.5 6.20101 1.5 12C1.5 17.799 6.20101 22.5 12 22.5ZM17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12ZM19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" fill="currentColor"></path></g></svg></span>
-                            <span>Statut: Tous</span>
-                        </button>
-
-                        <button className="flex items-center gap-2 bg-[#f6f7f9] text-sm hover:bg-gray-50 rounded text-gray-700 border-[#ccc] px-3 py-2">
-                            <span className="text-gray-500"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="m-q/palm"><g id="palm"><path id="Vector" d="M18.7303 10.5533C17.8577 9.6315 16.7769 9.27469 15.7654 9.18548L18.1254 8.46194L18.5221 7.45097L19.1964 8.18442L20.5449 7.61946C20.5449 7.61946 19.5434 4.82441 16.291 5.46866C15.2895 5.66689 14.5656 6.13273 14.0599 6.68778C13.9508 5.91468 13.6236 5.11185 12.9096 4.34866C10.5992 1.87078 8.22932 3.56565 8.22932 3.56565L9.01268 4.83432L9.96461 4.63609L9.73654 5.69663L11.3132 7.76814C10.391 7.12389 9.13167 6.73734 7.48562 7.27256C4.82814 8.15468 3.86629 10.5434 3.90596 11.4057L5.25453 11.2669L5.75033 10.4542L6.19654 11.0885L7.98142 10.9795L8.51688 9.94867L8.92343 10.7912L11.6999 10.3848C10.6091 11.6733 9.41923 13.7745 9.3994 16.7975C9.42915 16.7876 9.45889 16.7876 9.49856 16.7777C9.8952 16.7182 10.3018 16.6885 10.7083 16.6885C11.2636 16.6885 11.809 16.748 12.3444 16.857C12.3742 16.8669 12.394 16.8669 12.4238 16.8768C12.3048 15.3901 12.4733 12.6446 13.6038 10.6524L16.172 13.1402L16.9554 12.8726L16.9355 13.8637L18.3733 15.0729L19.0675 14.7855L18.9286 15.6974L20.0491 16.6885C20.7532 15.1225 21.0903 13.0312 18.7303 10.5533Z" fill="currentColor"></path><path id="Vector_2" d="M10.6982 17.2432C10.3115 17.2432 9.9347 17.2729 9.56781 17.3324C7.23756 17.6892 5.34361 19.1164 4.58008 20.9996H16.8164C16.1024 19.2255 14.377 17.8577 12.2352 17.4017C11.7493 17.2927 11.2337 17.2432 10.6982 17.2432Z" fill="currentColor"></path></g></g></svg></span>
-                            <span>Type d'absence: Quelconque</span>
-                        </button>
-                    </div>
+                <div className='p-6'>
+                    {loading || serviceLoading ? (
+                        <div className="flex items-center justify-center h-[50vh]">
+                            <ClipLoader color="#27a082" size={29} />
+                        </div>
+                    ) : interactions.length > 0 ? (
+                        <InfoDisplay interactions={interactions} />
+                    ) : (
+                        <AucuneHistorique />
+                    )}
                 </div>
-
-                <InfoDisplay />
             </motion.div>
         </>
     )
@@ -68,91 +103,108 @@ const AucuneHistorique = () => {
 
             <div className="mt-4">
                 <h2 className="text-gray-700 text-lg mt-6">
-                    Aucune demande historique
+                    Aucune interaction RH
                 </h2>
             </div>
             <p className="text-sm text-gray-400 mt-2 max-w-md">
-                Il n'y a actuellement aucune demande historique. Toutes les annonces ou
-                demandes passées apparaîtront ici.
+                Il n'y a actuellement aucune interaction RH. Les annonces et communications de la direction des ressources humaines apparaîtront ici.
             </p>
         </motion.div>
     );
 };
 
-// Composant principal d’affichage des annonces
-const InfoDisplay = () => {
-    const newsItems = [
-        {
-            date: "Today",
-            time: "03:00",
-            title: "Bienvenue dans l'Ère du Zéro !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-        {
-            date: "Jun 03",
-            year: "2020",
-            title: "L'Ère du Zéro approche !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-        {
-            date: "Jun 03",
-            year: "2020",
-            title: "L'Ère du Zéro approche !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-        {
-            date: "Jun 03",
-            year: "2020",
-            title: "L'Ère du Zéro approche !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-        {
-            date: "Jun 03",
-            year: "2020",
-            title: "L'Ère du Zéro approche !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-        {
-            date: "Jun 03",
-            year: "2020",
-            title: "L'Ère du Zéro approche !",
-            description:
-                "Chers Traders, le jour est enfin arrivé ! Aujourd'hui, nous avons officiellement lancé nos services de Spot Trading avec adhésion. Notre plateforme est...",
-        },
-    ];
-    if (newsItems.length === 0) {
-        return <AucuneHistorique />;
-    }
+// Composant principal d'affichage des interactions en fil d'Ariane vertical
+interface InfoDisplayProps {
+    interactions: InteractionRh[];
+}
+
+const InfoDisplay = ({ interactions }: InfoDisplayProps) => {
+    const formatDate = (dateString: string | null | undefined) => {
+        if (!dateString) return null;
+        try {
+            const date = new Date(dateString);
+            if (Number.isNaN(date.valueOf())) return null;
+            return {
+                date: format(date, "dd MMM yyyy", { locale: fr }),
+                time: format(date, "HH:mm", { locale: fr }),
+                full: format(date, "dd MMMM yyyy 'à' HH:mm", { locale: fr }),
+            };
+        } catch {
+            return null;
+        }
+    };
+
+    const isToday = (dateString: string | null | undefined) => {
+        if (!dateString) return false;
+        try {
+            const date = new Date(dateString);
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        } catch {
+            return false;
+        }
+    };
+
     return (
-        <div className="bg-white p-8">
-            {newsItems.map((item, index) => (
-                <div
-                    key={index}
-                    className={`flex ${index > 0 ? "mt-8 pt-8 border-t border-gray-200" : ""
-                        }`}
-                >
-                    <div className="flex-shrink-0 w-24 text-right pr-6">
-                        <p className="text-sm font-semibold text-gray-700">{item.date}</p>
-                        {item.time && (
-                            <p className="text-xs text-gray-500">{item.time}</p>
-                        )}
-                        {item.year && (
-                            <p className="text-xs text-gray-500">{item.year}</p>
-                        )}
-                    </div>
-                    <div className="flex-grow">
-                        <h3 className="text-base text-gray-800 mb-1">{item.title}</h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                            {item.description}
-                        </p>
-                    </div>
-                </div>
-            ))}
+        <div className="relative bg-white p-8">
+            {/* Ligne verticale du fil d'Ariane */}
+            <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+            <div className="relative space-y-8">
+                {interactions.map((interaction, index) => {
+                    const dateInfo = formatDate(interaction.date || interaction.created_at);
+                    const today = isToday(interaction.date || interaction.created_at);
+                    const isLast = index === interactions.length - 1;
+
+                    return (
+                        <motion.div
+                            key={interaction.id_interaction_rh || index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            className="relative flex items-start gap-6"
+                        >
+                            {/* Point du fil d'Ariane */}
+                            <div className="relative z-10 flex-shrink-0">
+                                <div className="w-4 h-4 rounded-full bg-[#27a082] border-4 border-white shadow-lg"></div>
+                                {!isLast && (
+                                    <div className="absolute left-1/2 top-4 w-0.5 h-full bg-gray-200 transform -translate-x-1/2"></div>
+                                )}
+                            </div>
+
+                            {/* Contenu de l'interaction */}
+                            <div className="flex-1 pb-8">
+                                <div className="bg-gray-50 rounded-lg border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                                    {/* En-tête avec date */}
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                                                {interaction.titre}
+                                            </h3>
+                                            {dateInfo && (
+                                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                    <Calendar className="h-4 w-4" />
+                                                    <span>
+                                                        {today ? "Aujourd'hui" : dateInfo.date} à {dateInfo.time}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Message */}
+                                    <div className="flex items-start gap-2 mt-4">
+                                        <MessageSquare className="h-4 w-4 text-[#27a082] mt-1 flex-shrink-0" />
+                                        <p className="text-sm text-gray-700 leading-relaxed">
+                                            {interaction.message}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    );
+                })}
+            </div>
         </div>
     );
 };

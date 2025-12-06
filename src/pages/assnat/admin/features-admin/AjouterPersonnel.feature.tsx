@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { ClipLoader } from "react-spinners";
+import { toast } from "sonner";
 import "../css/scroll.css";
 import DrawerAddPersonne from "../../../../components/admin/Drawer-add-personne";
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
@@ -281,6 +282,9 @@ const AjouterPersonnel: React.FC = () => {
         isOpen={isOpenConsultez}
         onClose={() => setIsOpenConsultez(false)}
         personnel={selectedPersonnel}
+        onInviteSuccess={() => {
+          toast.success("Invitation envoyée avec succès");
+        }}
       />
     </div>
   );

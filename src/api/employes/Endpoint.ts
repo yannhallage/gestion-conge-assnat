@@ -15,6 +15,9 @@ export const ENDPOINTS_EMPLOYE = {
     // Disponibilité
     getDisponibilite: (id: string) => `/user/disponibilite/${id}`, // GET : récupérer la disponibilité d'un utilisateur
 
+    // Interactions RH
+    getAllInteractionsRh: '/user/interactions-rh', // GET : récupérer toutes les interactions RH
+
     // (Pour les futures fonctionnalités)
     // createPeriodeConge: '/user/periodes-conge',          // POST : créer une période de congé
 };

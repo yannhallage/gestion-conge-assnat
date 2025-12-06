@@ -360,7 +360,12 @@ export default function Drawer({ isOpen, onClose, demande }: DrawerProps) {
                             </div>
 
                             <div className="flex-1">
-                                {activeTab === "Discussion" && <DiscussionComponent messages={discussionMessages} />}
+                                {activeTab === "Discussion" && (
+                                    <DiscussionComponent 
+                                        demandeId={demande?.id_demande ?? null}
+                                        messages={discussionMessages} 
+                                    />
+                                )}
 
                                 {activeTab === "Fichier" && (
                                     <div className="rounded-lg border border-gray-100 bg-white p-4 text-sm text-gray-500">

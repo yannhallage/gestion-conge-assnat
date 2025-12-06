@@ -36,17 +36,24 @@ interface DrawerProps {
   onClose: () => void;
   personnel: PersonnelDetails | null;
   onPersonnelUpdated?: (personnel: PersonnelDetails) => void;
+  onInviteSuccess?: () => void;
 }
 
-export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPersonnelUpdated }: DrawerProps) {
+export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPersonnelUpdated, onInviteSuccess }: DrawerProps) {
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [serviceName, setServiceName] = useState<string | null>(null);
+  const [contrats, setContrats] = useState<any[]>([]);
+  const [paies, setPaies] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingContrats, setLoadingContrats] = useState(false);
+  const [loadingPaies, setLoadingPaies] = useState(false);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
   // État local pour le personnel qui sera mis à jour dynamiquement
   const [localPersonnel, setLocalPersonnel] = useState<PersonnelDetails | null>(personnel);
 
   const { invitePersonnel, loading: inviteLoading } = useChefService();
-  const { getServiceById, updatePersonnel } = useRhService();
+  const { getServiceById, updatePersonnel, getContratsByPersonnel, getPaiesByPersonnel, getPersonnelDocumentsByPersonnel } = useRhService();
 
   // Synchroniser l'état local avec les props
   useEffect(() => {
@@ -103,6 +110,87 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
       setServiceName(null);
     }
   }, [localPersonnel?.id_service, personnel?.id_service, isOpen, getServiceById]);
+
+  useEffect(() => {
+    const fetchContrats = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel) {
+        setContrats([]);
+        return;
+      }
+
+      try {
+        setLoadingContrats(true);
+        const contratsData = await getContratsByPersonnel(currentPersonnel.id_personnel);
+        setContrats(Array.isArray(contratsData) ? contratsData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des contrats:", err);
+        setContrats([]);
+      } finally {
+        setLoadingContrats(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+      fetchContrats();
+    } else {
+      setContrats([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getContratsByPersonnel]);
+
+  useEffect(() => {
+    const fetchPaies = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel) {
+        setPaies([]);
+        return;
+      }
+
+      try {
+        setLoadingPaies(true);
+        const paiesData = await getPaiesByPersonnel(currentPersonnel.id_personnel);
+        setPaies(Array.isArray(paiesData) ? paiesData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des paies:", err);
+        setPaies([]);
+      } finally {
+        setLoadingPaies(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+      fetchPaies();
+    } else {
+      setPaies([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPaiesByPersonnel]);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel) {
+        setDocuments([]);
+        return;
+      }
+
+      try {
+        setLoadingDocuments(true);
+        const documentsData = await getPersonnelDocumentsByPersonnel(currentPersonnel.id_personnel);
+        setDocuments(Array.isArray(documentsData) ? documentsData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des documents:", err);
+        setDocuments([]);
+      } finally {
+        setLoadingDocuments(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+      fetchDocuments();
+    } else {
+      setDocuments([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPersonnelDocumentsByPersonnel]);
 
   const buildPayload = useCallback(() => {
     const currentPersonnel = localPersonnel || personnel;
@@ -174,6 +262,11 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
         type: "success",
         message: "Invitation envoyée avec succès et personnel activé.",
       });
+      
+      // Appeler le callback de succès pour afficher le toast dans le parent
+      if (onInviteSuccess) {
+        onInviteSuccess();
+      }
     } catch (err: any) {
       setInviteFeedback({
         type: "error",
@@ -182,7 +275,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
           "Une erreur est survenue lors de l'envoi de l'invitation.",
       });
     }
-  }, [buildPayload, invitePersonnel, localPersonnel, updatePersonnel]);
+  }, [buildPayload, invitePersonnel, localPersonnel, updatePersonnel, onPersonnelUpdated, onInviteSuccess]);
 
   const handleClose = () => {
     onClose();
@@ -360,6 +453,69 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
                     <InfoRow label="Nom" value={currentPersonnel.nom_contact_urgence} />
                     <InfoRow label="Téléphone" value={currentPersonnel.telephone_contact_urgence} />
                   </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      Contrats
+                    </h2>
+                    {loadingContrats ? (
+                      <div className="flex items-center justify-center py-4">
+                        <ClipLoader size={20} color="#27a082" />
+                      </div>
+                    ) : contrats.length > 0 ? (
+                      <div className="space-y-2">
+                        {contrats.map((contrat, index) => (
+                          <ContratCard key={contrat.id_contrat || index} contrat={contrat} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                        Aucun contrat enregistré
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      Paies
+                    </h2>
+                    {loadingPaies ? (
+                      <div className="flex items-center justify-center py-4">
+                        <ClipLoader size={20} color="#27a082" />
+                      </div>
+                    ) : paies.length > 0 ? (
+                      <div className="space-y-2">
+                        {paies.map((paie, index) => (
+                          <PaieCard key={paie.id_paie || index} paie={paie} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                        Aucune paie enregistrée
+                      </div>
+                    )}
+                  </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      Documents
+                    </h2>
+                    {loadingDocuments ? (
+                      <div className="flex items-center justify-center py-4">
+                        <ClipLoader size={20} color="#27a082" />
+                      </div>
+                    ) : documents.length > 0 ? (
+                      <div className="space-y-2">
+                        {documents.map((document, index) => (
+                          <DocumentCard key={document.id_document || index} document={document} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                        Aucun document enregistré
+                      </div>
+                    )}
+                  </section>
                 </>
               )}
             </div>
@@ -405,5 +561,239 @@ function formatDate(dateString?: string): string {
   } catch {
     return dateString;
   }
+}
+
+function formatDateShort(dateString?: string): string {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+function ContratCard({ contrat }: { contrat: any }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {contrat.type_contrat || "N/A"}
+            </span>
+            {contrat.statut && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                contrat.statut.toLowerCase().includes("actif") 
+                  ? "bg-green-100 text-green-700" 
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                {contrat.statut}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-500">Début: </span>
+              <span className="text-gray-800 font-medium">{formatDateShort(contrat.date_debut)}</span>
+            </div>
+            {contrat.date_fin && (
+              <div>
+                <span className="text-gray-500">Fin: </span>
+                <span className="text-gray-800 font-medium">{formatDateShort(contrat.date_fin)}</span>
+              </div>
+            )}
+          </div>
+          {contrat.salaire_reference && (
+            <div className="text-sm">
+              <span className="text-gray-500">Salaire de référence: </span>
+              <span className="text-gray-800 font-medium">
+                {new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(contrat.salaire_reference)}
+              </span>
+            </div>
+          )}
+        </div>
+        {contrat.url_contrat && (
+          <a
+            href={contrat.url_contrat}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le contrat"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PaieCard({ paie }: { paie: any }) {
+  const mois = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+  ];
+
+  const moisLabel = paie.mois ? mois[paie.mois - 1] : "N/A";
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-800">
+              {moisLabel} {paie.annee || ""}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-500">Brut: </span>
+              <span className="text-gray-800 font-medium">
+                {paie.salaire_brut ? new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(paie.salaire_brut) : "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500">Net: </span>
+              <span className="text-gray-800 font-medium">
+                {paie.salaire_net ? new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(paie.salaire_net) : "N/A"}
+              </span>
+            </div>
+          </div>
+          {(paie.primes || paie.deductions) && (
+            <div className="flex gap-4 text-sm">
+              {paie.primes && (
+                <div>
+                  <span className="text-gray-500">Primes: </span>
+                  <span className="text-green-600 font-medium">
+                    +{new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "XOF",
+                      minimumFractionDigits: 0,
+                    }).format(paie.primes)}
+                  </span>
+                </div>
+              )}
+              {paie.deductions && (
+                <div>
+                  <span className="text-gray-500">Déductions: </span>
+                  <span className="text-red-600 font-medium">
+                    -{new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "XOF",
+                      minimumFractionDigits: 0,
+                    }).format(paie.deductions)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {paie.url_bulletin && (
+          <a
+            href={paie.url_bulletin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le bulletin"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DocumentCard({ document }: { document: any }) {
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'CNI': 'Carte Nationale d\'Identité',
+      'CONTRAT': 'Contrat',
+      'DIPLOME': 'Diplôme',
+      'ATTestation': 'Attestation',
+    };
+    return labels[type] || type;
+  };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {getTypeLabel(document.type_document || "N/A")}
+            </span>
+          </div>
+        </div>
+        {document.url_document && (
+          <a
+            href={document.url_document}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le document"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
 }
 

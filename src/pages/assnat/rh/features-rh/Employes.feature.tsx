@@ -5,6 +5,8 @@ import '../css/scroll.css'
 
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
 import DrawerAddPersonne from "../../../../components/rh/Drawer-add-personne";
+import DrawerContratPaie from "../../../../components/rh/Drawer-contrat-paie";
+import DrawerDocumentPersonnel from "../../../../components/rh/Drawer-document-personnel";
 import { motion } from "framer-motion";
 import { useRhService } from "../../../../hooks/rh/useRhService";
 import { ClipLoader } from "react-spinners";
@@ -24,6 +26,9 @@ type PersonnelSummary = {
 const EmployesFeatures: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isOpenConsultez, setIsOpenConsultez] = useState(false);
+    const [isOpenContratPaie, setIsOpenContratPaie] = useState(false);
+    const [isOpenDocument, setIsOpenDocument] = useState(false);
+    const [contratPaieMode, setContratPaieMode] = useState<"contrat" | "paie">("contrat");
     const [active, setActive] = useState<string | null>(null);
     const [personnels, setPersonnels] = useState<PersonnelSummary[]>([]);
     const [services, setServices] = useState<Service[]>([]);
@@ -183,6 +188,20 @@ const EmployesFeatures: React.FC = () => {
                                                 setIsOpen(true);
                                             }
                                         }}
+                                        onContrat={() => {
+                                            setSelectedPersonnel(personnel);
+                                            setContratPaieMode("contrat");
+                                            setIsOpenContratPaie(true);
+                                        }}
+                                        onPaie={() => {
+                                            setSelectedPersonnel(personnel);
+                                            setContratPaieMode("paie");
+                                            setIsOpenContratPaie(true);
+                                        }}
+                                        onDocument={() => {
+                                            setSelectedPersonnel(personnel);
+                                            setIsOpenDocument(true);
+                                        }}
                                     />
                                 </div>
                             ))}
@@ -299,6 +318,29 @@ const EmployesFeatures: React.FC = () => {
                     }
                 }}
             />
+            <DrawerContratPaie
+                isOpen={isOpenContratPaie}
+                onClose={() => setIsOpenContratPaie(false)}
+                idPersonnel={selectedPersonnel?.id_personnel || ""}
+                nomPersonnel={selectedPersonnel?.nom_personnel}
+                prenomPersonnel={selectedPersonnel?.prenom_personnel}
+                mode={contratPaieMode}
+                onCreated={() => {
+                    // Rafraîchir les données si nécessaire
+                    fetchData(true);
+                }}
+            />
+            <DrawerDocumentPersonnel
+                isOpen={isOpenDocument}
+                onClose={() => setIsOpenDocument(false)}
+                idPersonnel={selectedPersonnel?.id_personnel || ""}
+                nomPersonnel={selectedPersonnel?.nom_personnel}
+                prenomPersonnel={selectedPersonnel?.prenom_personnel}
+                onCreated={() => {
+                    // Rafraîchir les données si nécessaire
+                    fetchData(true);
+                }}
+            />
         </motion.div>
     );
 };
@@ -306,7 +348,7 @@ const EmployesFeatures: React.FC = () => {
 export default EmployesFeatures;
 
 
-function Methode({ onEdit }: { onEdit: () => void }) {
+function Methode({ onEdit, onContrat, onPaie, onDocument }: { onEdit: () => void; onContrat: () => void; onPaie: () => void; onDocument: () => void }) {
     return (
         <div className="flex items-center gap-3 text-gray-500 
                                     opacity-0 translate-x-1 
@@ -323,26 +365,42 @@ function Methode({ onEdit }: { onEdit: () => void }) {
                 <Tooltip id="modifier" />
             </button>
             <button
-                className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="modifier le droit" data-tooltip-content="modifie le droit"
-            // onClick={() => setIsOpenDelete(true)}
-            >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-uy5o226"><g id="a-d/change-limits"><path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 4.34315 4.34315 3 6 3H18C19.6569 3 21 4.34315 21 6V18C21 19.6569 19.6569 21 18 21H6C4.34315 21 3 19.6569 3 18V6ZM13 6H11V9H8V11H11V14H13V11H16V9H13V6ZM16 18V16H8V18H16Z" fill="currentColor"></path></g></svg>
-                <Tooltip id="modifier le droit" />
-            </button>
-            <button
-                className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="role" data-tooltip-content="role"
-            // onClick={() => setIsOpenDelete(true)}
+                className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="contrat" data-tooltip-content="contrat"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onContrat();
+                }}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-isxo229"><g id="r-u/role-allmanagers"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M3.5 10.4299C3.5 5.76534 7.29667 2 12 2C16.7033 2 20.5 5.76534 20.5 10.4299C20.5 13.4459 18.8944 16.106 16.4767 17.5859V21.7072C16.4767 21.9132 16.25 22.0631 16.0422 21.9694L12.3967 20.246C12.1322 20.1336 11.8489 20.1336 11.5844 20.246L7.93889 21.9694C7.73111 22.0631 7.50444 21.932 7.50444 21.7072V17.5859C5.10556 16.106 3.5 13.4459 3.5 10.4299ZM6.01222 10.4299C6.01222 13.6894 8.67556 16.3308 11.9622 16.3308C15.23 16.3308 17.8933 13.6894 17.8933 10.4299C17.8933 7.17032 15.2489 4.52896 11.9622 4.52896C8.67556 4.52896 6.01222 7.17032 6.01222 10.4299ZM16.7789 10.4299C16.7789 13.0681 14.6224 15.2068 11.9622 15.2068C9.30206 15.2068 7.14557 13.0681 7.14557 10.4299C7.14557 7.79163 9.30206 5.65293 11.9622 5.65293C14.6224 5.65293 16.7789 7.79163 16.7789 10.4299Z" fill="currentColor"></path></g></svg>
-                <Tooltip id="role" />
+                <Tooltip id="contrat" />
             </button>
-            {/* <button
+            <button
+                className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="paie" data-tooltip-content="paie"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onPaie();
+                }}
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-paie"><g id="m-q/money"><path id="Vector" d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13.41 18.09V19.59H10.59V18.09C9.54 17.84 8.5 17.35 7.64 16.65L8.88 14.88C9.54 15.41 10.23 15.82 10.94 16.08V12.5H8.5V10.5H10.94V9.41C10.94 8.5 11.18 7.82 11.65 7.35C12.12 6.88 12.82 6.65 13.76 6.65C14.18 6.65 14.59 6.68 15 6.74V8.5H13.76C13.29 8.5 12.94 8.59 12.71 8.77C12.48 8.95 12.36 9.24 12.36 9.65V10.5H14.88L14.5 12.5H12.36V16.08C13.07 15.82 13.76 15.41 14.42 14.88L15.66 16.65C14.8 17.35 13.76 17.84 12.71 18.09V19.59H13.41V18.09Z" fill="currentColor"></path></g></svg>
+                <Tooltip id="paie" />
+            </button>
+            <button
+                className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="ajouter un document" data-tooltip-content="document"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDocument();
+                }}
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-uy5o226"><g id="a-d/change-limits"><path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M3 6C3 4.34315 4.34315 3 6 3H18C19.6569 3 21 4.34315 21 6V18C21 19.6569 19.6569 21 18 21H6C4.34315 21 3 19.6569 3 18V6ZM13 6H11V9H8V11H11V14H13V11H16V9H13V6ZM16 18V16H8V18H16Z" fill="currentColor"></path></g></svg>
+                <Tooltip id="ajouter un document" />
+            </button>
+            <button
                 className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="photo" data-tooltip-content="photo"
             // onClick={() => setIsOpenDelete(true)}
             >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui_icon_1z4c4c0lsv" aria-describedby="floating-ui-3e6i232"><g id="m-q/photo"><g id="Frame 635848"><path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M7.02618 5.80132C7.02618 4.80648 7.82316 4 8.80628 4H15.2984C16.2816 4 17.0785 4.80648 17.0785 5.80132H20.7435C21.4374 5.80132 22 6.3706 22 7.07285V18.7285C22 19.4307 21.4374 20 20.7435 20H3.25654C2.56257 20 2 19.4307 2 18.7285V7.07285C2 6.3706 2.56257 5.80132 3.25654 5.80132H7.02618ZM19.4869 9.19205C19.9496 9.19205 20.3246 8.81253 20.3246 8.34437C20.3246 7.87621 19.9496 7.49669 19.4869 7.49669C19.0243 7.49669 18.6492 7.87621 18.6492 8.34437C18.6492 8.81253 19.0243 9.19205 19.4869 9.19205ZM12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" fill="currentColor"></path></g></g></svg>
                 <Tooltip id="photo" />
-            </button> */}
+            </button>
             {/* <button
                 className="hover:text-[#27a082] cursor-pointer" data-tooltip-id="parametre" data-tooltip-content="parametre"
             // onClick={() => setIsOpenDelete(true)}

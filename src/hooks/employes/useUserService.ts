@@ -124,6 +124,20 @@ export function useUserService(userId: string | null | undefined) {
         }
     }, []);
 
+    const getAllInteractionsRh = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await userService.getAllInteractionsRh();
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de la récupération des interactions RH");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         loading,
         error,
@@ -135,5 +149,6 @@ export function useUserService(userId: string | null | undefined) {
         getDiscussions,
         getHistoriqueDemandes,
         getDisponibilite,
+        getAllInteractionsRh,
     };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import SidebarWithColor from '../layout/sidebarWithColor';
@@ -16,8 +16,8 @@ export default function Layout({ children, role }: LayoutProps) {
     // const [activeItem, setActiveItem] = useState<string>("");
 
     useEffect(() => {
-        const pathParts = location.pathname.split("/");
-        const lastPart = pathParts[pathParts.length - 1];
+        // const pathParts = location.pathname.split("/");
+        // const lastPart = pathParts[pathParts.length - 1];
         // setActiveItem(lastPart);
     }, [location.pathname]);
 

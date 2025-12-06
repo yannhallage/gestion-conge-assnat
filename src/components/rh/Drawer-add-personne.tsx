@@ -8,6 +8,8 @@ import type {
   RolePersonnel,
   Service,
   TypePersonnel,
+  TypeContrat,
+  StatutPersonnel,
   UpdatePersonnelDto,
 } from "../../types/validation.dto";
 
@@ -30,6 +32,16 @@ type PersonnelForEdit = {
   date_naissance?: string;
   id_service?: string;
   matricule_personnel?: string;
+  poste?: string;
+  type_contrat?: TypeContrat | string;
+  date_embauche?: string;
+  date_fin_contrat?: string;
+  salaire_base?: number;
+  niveau_hierarchique?: string;
+  numero_cnps?: string;
+  banque_nom?: string;
+  banque_rib?: string;
+  statut_professionnel?: StatutPersonnel | string;
 };
 
 interface DrawerProps {
@@ -42,10 +54,14 @@ interface DrawerProps {
 
 type PersonnelFormState = CreatePersonnelDto & {
   date_naissance?: string;
+  date_embauche?: string;
+  date_fin_contrat?: string;
 };
 
 const ROLES: RolePersonnel[] = ["ADMIN", "RH", "CHEF_SERVICE", "EMPLOYE"];
 const TYPES: TypePersonnel[] = ["PERMANENT", "CONTRACTUEL", "STAGIAIRE"];
+const TYPES_CONTRAT: TypeContrat[] = ["CDI", "CDD", "STAGE", "FREELANCE"];
+const STATUTS_PROFESSIONNEL: StatutPersonnel[] = ["ACTIF", "SUSPENDU", "EN_CONGE", "DEMISSIONNE", "LICENCIE"];
 
 export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated, personnelToEdit }: DrawerProps) {
   const { createPersonnel, updatePersonnel } = useRhService();
@@ -83,7 +99,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
     [services]
   );
 
-  const handleChange = (field: keyof PersonnelFormState, value: string | boolean) => {
+  const handleChange = (field: keyof PersonnelFormState, value: string | boolean | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -124,6 +140,20 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
           adresse_personnel: formData.adresse_personnel?.trim() || undefined,
           codepostal: formData.codepostal?.trim() || undefined,
           pays_personnel: formData.pays_personnel?.trim() || undefined,
+          poste: formData.poste?.trim() || undefined,
+          type_contrat: formData.type_contrat,
+          date_embauche: formData.date_embauche
+            ? new Date(formData.date_embauche).toISOString()
+            : undefined,
+          date_fin_contrat: formData.date_fin_contrat
+            ? new Date(formData.date_fin_contrat).toISOString()
+            : undefined,
+          salaire_base: formData.salaire_base || undefined,
+          niveau_hierarchique: formData.niveau_hierarchique?.trim() || undefined,
+          numero_cnps: formData.numero_cnps?.trim() || undefined,
+          banque_nom: formData.banque_nom?.trim() || undefined,
+          banque_rib: formData.banque_rib?.trim() || undefined,
+          statut_professionnel: formData.statut_professionnel,
         };
         console.log(payload);
         const updated = await updatePersonnel(personnelToEdit.id_personnel, payload);
@@ -132,7 +162,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
           onCreated(updated);
         }
       } else {
-        const payload: CreatePersonnelDto & { date_naissance?: string } = {
+        const payload: CreatePersonnelDto & { date_naissance?: string; date_embauche?: string; date_fin_contrat?: string } = {
           ...formData,
           nom_personnel: formData.nom_personnel.trim(),
           prenom_personnel: formData.prenom_personnel.trim(),
@@ -150,7 +180,20 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
           date_naissance: formData.date_naissance
             ? new Date(formData.date_naissance).toISOString()
             : undefined,
-
+          poste: formData.poste?.trim() || undefined,
+          type_contrat: formData.type_contrat || "CDI",
+          date_embauche: formData.date_embauche
+            ? new Date(formData.date_embauche).toISOString()
+            : undefined,
+          date_fin_contrat: formData.date_fin_contrat
+            ? new Date(formData.date_fin_contrat).toISOString()
+            : undefined,
+          salaire_base: formData.salaire_base || undefined,
+          niveau_hierarchique: formData.niveau_hierarchique?.trim() || undefined,
+          numero_cnps: formData.numero_cnps?.trim() || undefined,
+          banque_nom: formData.banque_nom?.trim() || undefined,
+          banque_rib: formData.banque_rib?.trim() || undefined,
+          statut_professionnel: formData.statut_professionnel || "ACTIF",
         };
 
         const created = await createPersonnel(payload);
@@ -453,7 +496,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
               </section>
 
               <section className="bg-white space-y-5">
-                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Contact d’urgence</h2>
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Contact d'urgence</h2>
                 <FormRow
                   label="Nom"
                   input={
@@ -461,19 +504,156 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                       type="text"
                       value={formData.nom_contact_urgence ?? ""}
                       onChange={(e) => handleChange("nom_contact_urgence", e.target.value)}
-                      placeholder="Nom du contact d’urgence"
+                      placeholder="Nom du contact d'urgence"
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
                 />
                 <FormRow
-                  label="Téléphone d’urgence"
+                  label="Téléphone d'urgence"
                   input={
                     <input
                       type="tel"
                       value={formData.telephone_contact_urgence ?? ""}
                       onChange={(e) => handleChange("telephone_contact_urgence", e.target.value)}
                       placeholder="+1 555 111 999"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+              </section>
+
+              <section className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Informations professionnelles</h2>
+                <FormRow
+                  label="Poste"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.poste ?? ""}
+                      onChange={(e) => handleChange("poste", e.target.value)}
+                      placeholder="Poste occupé"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Type de contrat"
+                  required
+                  input={
+                    <select
+                      value={formData.type_contrat ?? "CDI"}
+                      onChange={(e) => handleChange("type_contrat", e.target.value as TypeContrat)}
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    >
+                      {TYPES_CONTRAT.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  }
+                />
+                <FormRow
+                  label="Date d'embauche"
+                  input={
+                    <input
+                      type="date"
+                      value={formData.date_embauche ?? ""}
+                      onChange={(e) => handleChange("date_embauche", e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Date de fin de contrat"
+                  input={
+                    <input
+                      type="date"
+                      value={formData.date_fin_contrat ?? ""}
+                      onChange={(e) => handleChange("date_fin_contrat", e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Salaire de base"
+                  input={
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.salaire_base ?? ""}
+                      onChange={(e) => handleChange("salaire_base", e.target.value ? parseFloat(e.target.value) : undefined)}
+                      placeholder="0.00"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Niveau hiérarchique"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.niveau_hierarchique ?? ""}
+                      onChange={(e) => handleChange("niveau_hierarchique", e.target.value)}
+                      placeholder="Niveau hiérarchique"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Numéro CNPS"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.numero_cnps ?? ""}
+                      onChange={(e) => handleChange("numero_cnps", e.target.value)}
+                      placeholder="Numéro CNPS"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="Statut professionnel"
+                  required
+                  input={
+                    <select
+                      value={formData.statut_professionnel ?? "ACTIF"}
+                      onChange={(e) => handleChange("statut_professionnel", e.target.value as StatutPersonnel)}
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    >
+                      {STATUTS_PROFESSIONNEL.map((statut) => (
+                        <option key={statut} value={statut}>
+                          {statut}
+                        </option>
+                      ))}
+                    </select>
+                  }
+                />
+              </section>
+
+              <section className="bg-white space-y-5">
+                <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Informations bancaires</h2>
+                <FormRow
+                  label="Nom de la banque"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.banque_nom ?? ""}
+                      onChange={(e) => handleChange("banque_nom", e.target.value)}
+                      placeholder="Nom de la banque"
+                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                    />
+                  }
+                />
+                <FormRow
+                  label="RIB"
+                  input={
+                    <input
+                      type="text"
+                      value={formData.banque_rib ?? ""}
+                      onChange={(e) => handleChange("banque_rib", e.target.value)}
+                      placeholder="Numéro RIB"
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
@@ -515,6 +695,16 @@ function initialFormState(services: Service[]): PersonnelFormState {
     role_personnel: "EMPLOYE",
     type_personnel: "PERMANENT",
     id_service: defaultServiceId,
+    poste: "",
+    type_contrat: "CDI",
+    date_embauche: "",
+    date_fin_contrat: "",
+    salaire_base: undefined,
+    niveau_hierarchique: "",
+    numero_cnps: "",
+    banque_nom: "",
+    banque_rib: "",
+    statut_professionnel: "ACTIF",
   };
 }
 
@@ -552,6 +742,16 @@ function initialFormStateFromPersonnel(personnel: PersonnelForEdit, services: Se
     role_personnel: (personnel.role_personnel as RolePersonnel) ?? "EMPLOYE",
     type_personnel: (personnel.type_personnel as TypePersonnel) ?? "PERMANENT",
     id_service: personnel.id_service ?? defaultServiceId,
+    poste: personnel.poste ?? "",
+    type_contrat: (personnel.type_contrat as TypeContrat) ?? "CDI",
+    date_embauche: formatDateForInput(personnel.date_embauche),
+    date_fin_contrat: formatDateForInput(personnel.date_fin_contrat),
+    salaire_base: personnel.salaire_base ?? undefined,
+    niveau_hierarchique: personnel.niveau_hierarchique ?? "",
+    numero_cnps: personnel.numero_cnps ?? "",
+    banque_nom: personnel.banque_nom ?? "",
+    banque_rib: personnel.banque_rib ?? "",
+    statut_professionnel: (personnel.statut_professionnel as StatutPersonnel) ?? "ACTIF",
   };
 }
 

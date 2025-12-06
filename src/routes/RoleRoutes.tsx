@@ -14,6 +14,7 @@ import DisponibilitesFeature from "../pages/assnat/user/features-user/Disponibil
 import CalendarFeature from "../pages/assnat/user/features-user/Calendar.feature";
 import RapportFeature from "../pages/assnat/user/features-user/Rapport.feature";
 import InteractionUser from "../pages/assnat/user/features-user/Interaction.feature";
+import ProfilFeature from "../pages/assnat/user/features-user/Profil.feature";
 
 // --- ADMIN ---
 import PresenceAdmin from "../pages/assnat/admin/Presence";
@@ -27,7 +28,7 @@ import RapportFeatureAdmin from "../pages/assnat/admin/features-admin/Rapport.fe
 import AjouterPersonnel from "../pages/assnat/admin/features-admin/AjouterPersonnel.feature";
 
 // --- RH ---
-import PresenceRh from "../pages/assnat/rh/Presence";
+// import PresenceRh from "../pages/assnat/rh/Presence";
 import DashboardFeatures from "../pages/assnat/rh/features-rh/Dashbboard.feature";
 import DemandesFeatureRh from "../pages/assnat/rh/features-rh/Demandes.feature";
 import CalendarFeatureRH from "../pages/assnat/rh/features-rh/Calendar.feature";
@@ -61,9 +62,10 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
             <Route key="user-historique" path={`${base}/historique`} element={wrap(<HistoriquesFeature />)} />,
             <Route key="user-rapport" path={`${base}/rapport`} element={wrap(<RapportFeature />)} />,
             <Route key="user-interaction" path={`${base}/interaction`} element={wrap(<InteractionUser />)} />,
+            <Route key="user-profil" path={`${base}/profil`} element={wrap(<ProfilFeature />)} />,
         ];
     }
-
+    
     if (role === "admin") {
         return [
             <Route key="admin-presence" path={`${base}/presence`} element={wrap(<PresenceAdmin />)} />,
@@ -75,6 +77,8 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
             <Route key="admin-historique" path={`${base}/historique`} element={wrap(<HistoriquesFeatureAdmin />)} />,
             <Route key="admin-rapport" path={`${base}/rapport`} element={wrap(<RapportFeatureAdmin />)} />,
             <Route key="admin-personne" path={`${base}/personne`} element={wrap(<AjouterPersonnel />)} />,
+            <Route key="admin-interaction" path={`${base}/interaction`} element={wrap(<InteractionUser />)} />,
+            <Route key="admin-profil" path={`${base}/profil`} element={wrap(<ProfilFeature />)} />,
         ];
     }
 
@@ -91,6 +95,7 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
             <Route key="rh-service" path={`${base}/service`} element={wrap(<ServicesFeatures />)} />,
             <Route key="rh-interaction" path={`${base}/interaction`} element={wrap(<InteractionRhFeatures />)} />,
             <Route key="rh-typeconge" path={`${base}/typeconge`} element={wrap(<TypeCongeFeature />)} />,
+            <Route key="rh-profil" path={`${base}/profil`} element={wrap(<ProfilFeature />)} />,
         ];
     }
 

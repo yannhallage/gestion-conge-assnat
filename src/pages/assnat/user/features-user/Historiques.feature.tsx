@@ -5,10 +5,11 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useUserService } from "../../../../hooks/employes/useUserService";
+import HistoriqueDrawer from "../../../../components/HistoriqueDrawer";
 
 const HistoriquesFeature = () => {
-
     const [loading, setLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 700);
@@ -32,11 +33,12 @@ const HistoriquesFeature = () => {
 
     return (
         <div className="h-full flex flex-col bg-white">
-            <header className="border-b border-gray-200 px-5 py-3">
+            <header className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
                 <h1 className="text-xl text-gray-800">Historiques</h1>
+                <RefreshButton onRefresh={() => setRefreshTrigger(prev => prev + 1)} />
             </header>
             <div className="flex-1 overflow-y-auto">
-                <HistoriqueDemandes />
+                <HistoriqueDemandes refreshTrigger={refreshTrigger} />
             </div>
         </div>
     );
@@ -83,7 +85,7 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
     year: "numeric",
 });
 
-function HistoriqueDemandes() {
+function HistoriqueDemandes({ refreshTrigger }: { refreshTrigger?: number }) {
     const { user } = useAuth();
     const userId = user?.id ?? null;
     const { getHistoriqueDemandes, error: serviceError } = useUserService(userId);
@@ -136,7 +138,7 @@ function HistoriqueDemandes() {
         return () => {
             cancelled = true;
         };
-    }, [getHistoriqueDemandes, userId]);
+    }, [getHistoriqueDemandes, userId, refreshTrigger]);
 
     const filteredDemandes = useMemo(() => {
         return demandes.filter((demande) => {
@@ -231,22 +233,36 @@ function HistoriqueDemandes() {
 }
 
 function HistoriqueTable({ demandes }: { demandes: HistoriqueDemande[] }) {
+    const [selectedDemandeId, setSelectedDemandeId] = useState<string | null>(null);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const handleRowClick = (demandeId: string) => {
+        setSelectedDemandeId(demandeId);
+        setIsDrawerOpen(true);
+    };
+
+    const handleCloseDrawer = () => {
+        setIsDrawerOpen(false);
+        setSelectedDemandeId(null);
+    };
+
     return (
-        <div className="overflow-hidden  border border-gray-100 bg-white shadow-sm">
-            <table className="w-full table-fixed text-sm text-gray-700">
-                <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                    <tr>
-                        <th className="px-5 py-3 text-left">Type</th>
-                        <th className="px-5 py-3 text-left">Période</th>
-                        <th className="px-5 py-3 text-left">Durée</th>
-                        <th className="px-5 py-3 text-left">Service</th>
-                        <th className="px-5 py-3 text-left">Créée le</th>
-                        <th className="px-5 py-3 text-left">Motif</th>
-                        <th className="px-5 py-3 text-left">Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {demandes.map((demande) => {
+        <>
+            <div className="overflow-hidden  border border-gray-100 bg-white shadow-sm">
+                <table className="w-full table-fixed text-sm text-gray-700">
+                    <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th className="px-5 py-3 text-left">Type</th>
+                            <th className="px-5 py-3 text-left">Période</th>
+                            <th className="px-5 py-3 text-left">Durée</th>
+                            <th className="px-5 py-3 text-left">Service</th>
+                            <th className="px-5 py-3 text-left">Créée le</th>
+                            <th className="px-5 py-3 text-left">Motif</th>
+                            <th className="px-5 py-3 text-left">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {demandes.map((demande) => {
                         const statusKey = (demande.statut_demande ?? "").toUpperCase();
                         const statusStyle = STATUS_STYLES[statusKey] ?? STATUS_STYLES.REFUSEE;
                         const typeLabel =
@@ -270,7 +286,8 @@ function HistoriqueTable({ demandes }: { demandes: HistoriqueDemande[] }) {
                         return (
                             <tr
                                 key={demande.id_demande}
-                                className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors"
+                                onClick={() => handleRowClick(demande.id_demande)}
+                                className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors cursor-pointer"
                             >
                                 <td className="px-5 py-4 font-medium text-gray-800">{typeLabel}</td>
                                 <td className="px-5 py-4 text-gray-600">{periodLabel}</td>
@@ -302,6 +319,12 @@ function HistoriqueTable({ demandes }: { demandes: HistoriqueDemande[] }) {
                 </tbody>
             </table>
         </div>
+        <HistoriqueDrawer
+            isOpen={isDrawerOpen}
+            onClose={handleCloseDrawer}
+            demandeId={selectedDemandeId}
+        />
+        </>
     );
 }
 
@@ -329,5 +352,52 @@ const AucuneHistorique = () => {
                 refusées apparaîtront ici.
             </p>
         </motion.div>
+    );
+};
+
+const RefreshButton = ({ onRefresh }: { onRefresh: () => void }) => {
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
+    const handleRefresh = async () => {
+        setRefreshLoading(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            onRefresh();
+        } finally {
+            setRefreshLoading(false);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleRefresh}
+            disabled={refreshLoading}
+            className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Rafraîchir les données"
+        >
+            {refreshLoading ? (
+                <>
+                    <ClipLoader size={14} color="#27a082" />
+                    <span>Chargement...</span>
+                </>
+            ) : (
+                <>
+                    <svg 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+                    >
+                        <path 
+                            d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+                            fill="currentColor"
+                        />
+                    </svg>
+                    <span>Rafraîchir</span>
+                </>
+            )}
+        </button>
     );
 };

@@ -96,6 +96,16 @@ class ChefService {
             body: payload,
         });
     }
+
+    /**
+     * Récupérer les discussions d'une demande
+     */
+    async getDiscussions(demandeId: string, chefId: string) {
+        const query = `?id_chef=${chefId}`;
+        return Http(`${ENDPOINTS_CHEFDESERVICE.getDiscussions(demandeId)}${query}`, {
+            method: 'GET',
+        });
+    }
 }
 
 // Export d’une instance singleton

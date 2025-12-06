@@ -96,6 +96,15 @@ class UserService {
             method: 'GET',
         });
     }
+
+    /**
+     * Récupérer toutes les interactions RH
+     */
+    async getAllInteractionsRh() {
+        return Http(ENDPOINTS_EMPLOYE.getAllInteractionsRh, {
+            method: 'GET',
+        });
+    }
 }
 
 // Export d’une instance singleton

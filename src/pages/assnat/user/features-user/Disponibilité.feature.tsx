@@ -34,10 +34,9 @@ const DisponibilitesFeature = () => {
             try {
                 setLoadingData(true);
                 const data = await getDisponibilite(userId);
-                // Supposons que la réponse contient un champ 'disponibilite' ou 'jours_disponibles'
-                const dispoValue = typeof data === 'number' 
-                    ? data 
-                    : (data?.disponibilite || data?.jours_disponibles || 0);
+
+                // La réponse du backend est sous la forme {"disponibilité_day": 40}
+                const dispoValue = data?.disponibilité_day ?? data?.disponibilite ?? data?.jours_disponibles ?? 0;
                 setDisponibilite(Number(dispoValue) || 0);
             } catch (err: any) {
                 console.error("Erreur lors du chargement de la disponibilité :", err);

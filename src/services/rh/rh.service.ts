@@ -5,7 +5,14 @@ import type {
     CreateServiceDto,
     CreatePersonnelDto,
     UpdatePersonnelDto,
-    CreateTypeCongeDto
+    CreateTypeCongeDto,
+    CreateInteractionRhDto,
+    CreateContratDto,
+    UpdateContratDto,
+    CreatePaieDto,
+    UpdatePaieDto,
+    CreatePersonnelDocumentDto,
+    UpdatePersonnelDocumentDto
 } from '../../../src/types/validation.dto';
 
 class RhServiceFront {
@@ -128,7 +135,164 @@ class RhServiceFront {
             method: 'GET',
         });
     }
+
+    // -----------------------------
+    // Interactions RH
+    // -----------------------------
+    async createInteractionRh(payload: CreateInteractionRhDto) {
+        return Http(ENDPOINTS_RH.createInteractionRh, {
+            method: 'POST',
+            body: payload,
+        });
+    }
+
+    async getAllInteractionsRh() {
+        return Http(ENDPOINTS_RH.getAllInteractionsRh, {
+            method: 'GET',
+        });
+    }
+
+    async deleteInteractionRh(id: string) {
+        return Http(ENDPOINTS_RH.deleteInteractionRh(id), {
+            method: 'DELETE',
+        });
+    }
+
+    // -----------------------------
+    // Contrats
+    // -----------------------------
+    async createContrat(payload: CreateContratDto) {
+        return Http(ENDPOINTS_RH.createContrat, {
+            method: 'POST',
+            body: payload,
+        });
+    }
+
+    async getAllContrats() {
+        return Http(ENDPOINTS_RH.getAllContrats, {
+            method: 'GET',
+        });
+    }
+
+    async getContratById(id: string) {
+        return Http(ENDPOINTS_RH.getContratById(id), {
+            method: 'GET',
+        });
+    }
+
+    async getContratsByPersonnel(idPersonnel: string) {
+        return Http(ENDPOINTS_RH.getContratsByPersonnel(idPersonnel), {
+            method: 'GET',
+        });
+    }
+
+    async updateContrat(id: string, payload: UpdateContratDto) {
+        return Http(ENDPOINTS_RH.updateContrat(id), {
+            method: 'PUT',
+            body: payload,
+        });
+    }
+
+    async deleteContrat(id: string) {
+        return Http(ENDPOINTS_RH.deleteContrat(id), {
+            method: 'DELETE',
+        });
+    }
+
+    // -----------------------------
+    // Paies
+    // -----------------------------
+    async createPaie(payload: CreatePaieDto) {
+        return Http(ENDPOINTS_RH.createPaie, {
+            method: 'POST',
+            body: payload,
+        });
+    }
+
+    async getAllPaies() {
+        return Http(ENDPOINTS_RH.getAllPaies, {
+            method: 'GET',
+        });
+    }
+
+    async getPaieById(id: string) {
+        return Http(ENDPOINTS_RH.getPaieById(id), {
+            method: 'GET',
+        });
+    }
+
+    async getPaiesByPersonnel(idPersonnel: string) {
+        return Http(ENDPOINTS_RH.getPaiesByPersonnel(idPersonnel), {
+            method: 'GET',
+        });
+    }
+
+    async getPaiesByMoisAnnee(mois: number, annee: number) {
+        return Http(ENDPOINTS_RH.getPaiesByMoisAnnee(mois.toString(), annee.toString()), {
+            method: 'GET',
+        });
+    }
+
+    async updatePaie(id: string, payload: UpdatePaieDto) {
+        return Http(ENDPOINTS_RH.updatePaie(id), {
+            method: 'PUT',
+            body: payload,
+        });
+    }
+
+    async deletePaie(id: string) {
+        return Http(ENDPOINTS_RH.deletePaie(id), {
+            method: 'DELETE',
+        });
+    }
+
+    // -----------------------------
+    // Documents du Personnel
+    // -----------------------------
+    async createPersonnelDocument(payload: CreatePersonnelDocumentDto) {
+        return Http(ENDPOINTS_RH.createPersonnelDocument, {
+            method: 'POST',
+            body: payload,
+        });
+    }
+
+    async getAllPersonnelDocuments() {
+        return Http(ENDPOINTS_RH.getAllPersonnelDocuments, {
+            method: 'GET',
+        });
+    }
+
+    async getPersonnelDocumentById(id: string) {
+        return Http(ENDPOINTS_RH.getPersonnelDocumentById(id), {
+            method: 'GET',
+        });
+    }
+
+    async getPersonnelDocumentsByPersonnel(idPersonnel: string) {
+        return Http(ENDPOINTS_RH.getPersonnelDocumentsByPersonnel(idPersonnel), {
+            method: 'GET',
+        });
+    }
+
+    async getPersonnelDocumentsByType(idPersonnel: string, type: string) {
+        return Http(ENDPOINTS_RH.getPersonnelDocumentsByType(idPersonnel, type), {
+            method: 'GET',
+        });
+    }
+
+    async updatePersonnelDocument(id: string, payload: UpdatePersonnelDocumentDto) {
+        return Http(ENDPOINTS_RH.updatePersonnelDocument(id), {
+            method: 'PUT',
+            body: payload,
+        });
+    }
+
+    async deletePersonnelDocument(id: string) {
+        return Http(ENDPOINTS_RH.deletePersonnelDocument(id), {
+            method: 'DELETE',
+        });
+    }
 }
 
-// Export d’une instance singleton
+// Export d'une instance singleton
 export const rhServiceFront = new RhServiceFront();
