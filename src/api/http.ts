@@ -1,6 +1,7 @@
 import { ACCESS_TOKEN_KEY } from "../secure/storageKeys";
 
-const BASE_URL = "http://localhost:3003";
+const BASE_URL = "https://assnat-api-nest.onrender.com";
+// const BASE_URL = "http://localhost:3003";
 
 export interface RequestOptions extends RequestInit {
     body?: any;
