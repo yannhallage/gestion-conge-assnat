@@ -117,7 +117,7 @@ export default function ServicesFeatures() {
                                     <div className="ml-4 flex-1">
                                         <div className="font-medium">{service.nom_service}</div>
                                         <div className="text-sm text-gray-500">
-                                            {service.code_service} · {service.nb_personnel ?? 0} personne(s)
+                                            {service.code_service} · {0} personne(s)
                                         </div>
                                     </div>
                                     <Methode />

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Tooltip } from 'react-tooltip'
 import { ClipLoader } from "react-spinners"
 import { ConfirmModal } from "../../../../components/modal-component";
 import Drawer, { type RhDemandeDrawerData } from "../../../../components/rh/drawer";
+import { useRhService } from "../../../../hooks/rh/useRhService";
 
 
 const DemandesFeatureRh = () => {
@@ -79,57 +80,121 @@ export default DemandesFeatureRh;
 
 
 
-const MOCK_DEMANDES: RhDemandeDrawerData[] = [
-    {
-        id_demande: "DEM-2025-0001",
-        statut_demande: "APPROUVEE",
-        type_demande: "Congé annuel",
-        date_demande: "2025-10-01T08:30:00Z",
-        motif: "Vacances familiales programmées de longue date.",
-        nb_jour: 4,
-        personnel: {
-            nom_personnel: "Orathsa",
-            prenom_personnel: "Admin",
-            email_travail: "admin.orathsa@assnat.bj",
-            telephone_travail: "+229 01 02 03 04",
-            service: {
-                nom_service: "Ressources humaines",
-            },
-        },
-        periodeConge: {
-            date_debut: "2025-10-13",
-            date_fin: "2025-10-16",
-            nb_jour: 4,
-            typeConge: {
-                libelle_typeconge: "Congé annuel",
-            },
-        },
-        chef_service: {
-            nom_personnel: "Doe",
-            prenom_personnel: "Jane",
-        },
-    },
-];
-
 export function MesDemandes() {
+    const { getDemandes } = useRhService();
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);
     const [selectedDemande, setSelectedDemande] = useState<RhDemandeDrawerData | null>(null);
+    const [refreshLoading, setRefreshLoading] = useState(false);
+    const [demandes, setDemandes] = useState<RhDemandeDrawerData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const fetchDemandes = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getDemandes();
+            setDemandes(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            setError(err?.message || "Erreur lors du chargement des demandes.");
+        } finally {
+            setLoading(false);
+        }
+    }, [getDemandes]);
+
+    useEffect(() => {
+        fetchDemandes();
+    }, [fetchDemandes, refreshTrigger]);
 
     const handleOpenDrawer = (demande: RhDemandeDrawerData) => {
         setSelectedDemande(demande);
         setIsOpen(true);
     };
+
+    const handleRefresh = async () => {
+        setRefreshLoading(true);
+        try {
+            setRefreshTrigger(prev => prev + 1);
+        } finally {
+            setRefreshLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <ClipLoader
+                    color="#27a082"
+                    loading={loading}
+                    size={29}
+                    speedMultiplier={3}
+                    aria-label="Chargement..."
+                    data-testid="loader"
+                />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-600">{error}</p>
+                    <button
+                        onClick={handleRefresh}
+                        className="mt-3 text-sm text-red-600 hover:text-red-700 underline"
+                    >
+                        Réessayer
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 font-sans text-gray-800 h-screen overflow-y-auto ">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-                <input
-                    type="text"
-                    placeholder="Recherche de demande"
-                    className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
-                />
+            <div className="flex flex-wrap items-center gap-3 mb-6 justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    <input
+                        type="text"
+                        placeholder="Recherche de demande"
+                        className="border border-[#ccc] px-3 py-1 w-64 focus:outline-none focus:ring-1 focus:ring-green-200"
+                    />
+                </div>
+                <button
+                    onClick={handleRefresh}
+                    disabled={refreshLoading}
+                    className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Rafraîchir les données"
+                >
+                    {refreshLoading ? (
+                        <>
+                            <ClipLoader size={14} color="#27a082" />
+                            <span>Chargement...</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg 
+                                width="16" 
+                                height="16" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                xmlns="http://www.w3.org/2000/svg"
+                                className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+                            >
+                                <path 
+                                    d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+                                    fill="currentColor"
+                                />
+                            </svg>
+                            <span>Rafraîchir</span>
+                        </>
+                    )}
+                </button>
 
                 <button className="flex items-center bg-[#f6f7f9] hover:bg-gray-50 gap-2 text-sm text-gray-700 rounded border-[#ccc] px-3 py-2">
                     <span className="text-gray-500 "><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="a-d/date"><g id="Frame 4"><path id="Union" fill-rule="evenodd" clip-rule="evenodd" d="M8 3H6V5H5.11765C3.9481 5 3 5.95513 3 7.13333V18.8667C3 20.0449 3.9481 21 5.11765 21H18.8824C20.0519 21 21 20.0449 21 18.8667V7.13333C21 5.95513 20.0519 5 18.8824 5H18V3H16V5H8V3ZM5.11765 18.8667L5.11765 11H18.8824V18.8667H5.11765ZM7 16V14H9V16H7ZM11 14H13V16H11V14Z" fill="currentColor"></path></g></g></svg></span>
@@ -167,7 +232,14 @@ export function MesDemandes() {
                     </thead>
 
                     <tbody>
-                        {MOCK_DEMANDES.map((demande) => {
+                        {demandes.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-8 text-center text-gray-500">
+                                    Aucune demande approuvée trouvée
+                                </td>
+                            </tr>
+                        ) : (
+                            demandes.map((demande) => {
                             const start = demande.periodeConge?.date_debut
                                 ? new Date(demande.periodeConge.date_debut)
                                 : null;
@@ -324,7 +396,8 @@ export function MesDemandes() {
                                     </td>
                                 </tr>
                             );
-                        })}
+                        })
+                        )}
                     </tbody>
                 </table>
 

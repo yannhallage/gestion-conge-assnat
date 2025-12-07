@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
 import img from './../assets/36281.png';
-import { Eye, EyeOff, Facebook } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import ErrorMessage from '../errors/ErrorMessage';
+// import ErrorMessage from '../errors/ErrorMessage';
 
 
 

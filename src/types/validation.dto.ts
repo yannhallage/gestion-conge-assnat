@@ -21,6 +21,20 @@ export interface ChangePasswordPayload {
     new_password: string;
 }
 
+export interface UpdatePasswordDto {
+    ancien_mot_de_passe: string;
+    nouveau_mot_de_passe: string;
+}
+
+export interface UpdatePersonalInfoDto {
+    telephone_travail?: string;
+    telephone_personnel?: string;
+    ville_personnel?: string;
+    telephone_contact_urgence?: string;
+    nom_contact_urgence?: string;
+    date_naissance?: string;
+}
+
 
 
 export interface ApproveDemandePayload {
@@ -42,6 +56,7 @@ export interface InvitePersonnelPayload {
 export interface CreateDiscussionPayload {
     message: string;
     heure_message?: string;
+    auteur_message: string;
 }
 
 export interface ChefActionPayload {
@@ -63,11 +78,6 @@ export interface CreateDemandePayload {
     id_typeconge: string;
 }
 
-export interface CreateDiscussionPayload {
-    message: string;
-    heure_message?: string;
-}
-
 
 
 
@@ -80,7 +90,8 @@ export interface CreateDirectionDto {
     code_direction: string;
     nom_direction: string;
     nom_directeur: string;
-    email_direction?: string;
+    email_direction: string; // Requis selon le backend (@IsEmail, @IsNotEmpty)
+    nb_personnel?: number; // Optionnel selon le backend (@IsOptional)
     numero_direction?: string;
     business_email?: string;
     business_phone?: string;
@@ -99,7 +110,9 @@ export interface CreateServiceDto {
     code_service: string;
     nom_service: string;
     id_direction: string;
-    nb_personnel?: number;
+    id_chefdeservice?: string;
+    // nb_personnel a une valeur par défaut dans le modèle Prisma
+    // et ne doit pas être envoyé au backend
 }
 
 // -----------------------------
@@ -107,6 +120,8 @@ export interface CreateServiceDto {
 // -----------------------------
 export type RolePersonnel = 'ADMIN' | 'RH' | 'CHEF_SERVICE' | 'EMPLOYE';
 export type TypePersonnel = 'PERMANENT' | 'CONTRACTUEL' | 'STAGIAIRE';
+export type TypeContrat = 'CDI' | 'CDD' | 'STAGE' | 'FREELANCE';
+export type StatutPersonnel = 'ACTIF' | 'SUSPENDU' | 'EN_CONGE' | 'DEMISSIONNE' | 'LICENCIE';
 
 export interface CreatePersonnelDto {
     nom_personnel: string;
@@ -126,6 +141,16 @@ export interface CreatePersonnelDto {
     role_personnel: RolePersonnel;
     type_personnel: TypePersonnel;
     id_service: string;
+    poste?: string;
+    type_contrat?: TypeContrat;
+    date_embauche?: string;
+    date_fin_contrat?: string;
+    salaire_base?: number;
+    niveau_hierarchique?: string;
+    numero_cnps?: string;
+    banque_nom?: string;
+    banque_rib?: string;
+    statut_professionnel?: StatutPersonnel;
 }
 
 export interface UpdatePersonnelDto {
@@ -136,8 +161,26 @@ export interface UpdatePersonnelDto {
     matricule_personnel?: string;
     telephone_travail?: string;
     telephone_personnel?: string;
+    ville_personnel?: string;
+    adresse_personnel?: string;
+    codepostal?: string;
+    pays_personnel?: string;
+    telephone_contact_urgence?: string;
+    nom_contact_urgence?: string;
+    date_naissance?: string;
     role_personnel?: RolePersonnel;
     type_personnel?: TypePersonnel;
+    is_active?: boolean;
+    poste?: string;
+    type_contrat?: TypeContrat;
+    date_embauche?: string;
+    date_fin_contrat?: string;
+    salaire_base?: number;
+    niveau_hierarchique?: string;
+    numero_cnps?: string;
+    banque_nom?: string;
+    banque_rib?: string;
+    statut_professionnel?: StatutPersonnel;
 }
 
 // -----------------------------
@@ -146,6 +189,12 @@ export interface UpdatePersonnelDto {
 export interface CreateTypeCongeDto {
     libelle_typeconge: string;
     is_active?: boolean;
+}
+
+export interface CreateInteractionRhDto {
+    titre: string;
+    message: string;
+    date?: string;
 }
 
 
@@ -181,11 +230,12 @@ export interface Direction {
 
 
 export interface CreateDirectionForm {
-    id_direction?: string;
+    id_direction?: string; // Pour l'édition, pas dans le DTO backend
     code_direction: string;
     nom_direction: string;
     nom_directeur: string;
-    email_direction?: string;
+    email_direction: string; // Requis selon le backend (@IsEmail, @IsNotEmpty)
+    nb_personnel?: number; // Optionnel selon le backend (@IsOptional)
     numero_direction?: string;
     business_email?: string;
     business_phone?: string;
@@ -195,4 +245,68 @@ export interface CreateDirectionForm {
     nombre_service?: string;
     motif_creation?: string;
     statut?: string;
+}
+
+// -----------------------------
+// Contrats
+// -----------------------------
+export type TypeContratEnum = 'CDI' | 'CDD' | 'STAGE' | 'CONSULTANT';
+
+export interface CreateContratDto {
+    type_contrat: TypeContratEnum;
+    date_debut: string; // Date au format ISO string
+    date_fin?: string; // Date au format ISO string
+    salaire_reference?: number;
+    url_contrat?: string;
+    statut?: string;
+    id_personnel: string;
+}
+
+export interface UpdateContratDto {
+    type_contrat?: TypeContratEnum;
+    date_debut?: string;
+    date_fin?: string;
+    salaire_reference?: number;
+    url_contrat?: string;
+    statut?: string;
+}
+
+// -----------------------------
+// Paies
+// -----------------------------
+export interface CreatePaieDto {
+    mois: number; // 1-12
+    annee: number; // >= 2000
+    salaire_net: number;
+    salaire_brut: number;
+    primes?: number;
+    deductions?: number;
+    url_bulletin?: string;
+    id_personnel: string;
+}
+
+export interface UpdatePaieDto {
+    mois?: number;
+    annee?: number;
+    salaire_net?: number;
+    salaire_brut?: number;
+    primes?: number;
+    deductions?: number;
+    url_bulletin?: string;
+}
+
+// -----------------------------
+// Documents du Personnel
+// -----------------------------
+export type TypeDocumentEnum = 'CNI' | 'CONTRAT' | 'DIPLOME' | 'ATTestation';
+
+export interface CreatePersonnelDocumentDto {
+    type_document: TypeDocumentEnum;
+    id_personnel: string;
+    url_document?: string; // Optionnel car le fichier est envoyé séparément
+}
+
+export interface UpdatePersonnelDocumentDto {
+    type_document?: TypeDocumentEnum;
+    url_document?: string;
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { ClipLoader } from "react-spinners";
+import { toast } from "sonner";
 import "../css/scroll.css";
 import DrawerAddPersonne from "../../../../components/admin/Drawer-add-personne";
 import DrawerSeePersonneData from "../../../../components/admin/Drawer-see-personne-data";
@@ -213,8 +214,25 @@ const AjouterPersonnel: React.FC = () => {
           + AJOUTER UN FILTRE
         </button>{" "}
       </div>
-      <div className="px-6 py-2 text-sm text-gray-500">
-        {personnelsCountLabel}
+      <div className="px-6 py-2 flex items-center justify-between">
+        <span className="text-sm text-gray-500">{personnelsCountLabel}</span>
+        <RefreshButton 
+          onRefresh={async () => {
+            if (!serviceId) return;
+            setLoading(true);
+            setError(null);
+            try {
+              const personnelsRes = await getServicePersonnel(serviceId);
+              const personnelsArray = Array.isArray(personnelsRes) ? personnelsRes : [];
+              setPersonnels(personnelsArray);
+            } catch (err: any) {
+              setError(err?.message || "Erreur lors du chargement des informations du personnel.");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          disabled={loading || !serviceId}
+        />
       </div>
       <div className="">
         {loading ? (
@@ -264,12 +282,63 @@ const AjouterPersonnel: React.FC = () => {
         isOpen={isOpenConsultez}
         onClose={() => setIsOpenConsultez(false)}
         personnel={selectedPersonnel}
+        onInviteSuccess={() => {
+          toast.success("Invitation envoyée avec succès");
+        }}
       />
     </div>
   );
 };
 
 export default AjouterPersonnel;
+
+const RefreshButton = ({ onRefresh, disabled }: { onRefresh: () => Promise<void>; disabled?: boolean }) => {
+  const [refreshLoading, setRefreshLoading] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshLoading(true);
+    try {
+      await onRefresh();
+    } catch (err) {
+      console.error("Erreur lors du rafraîchissement:", err);
+    } finally {
+      setRefreshLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleRefresh}
+      disabled={refreshLoading || disabled}
+      className="flex items-center gap-2 text-sm text-[#27a082] hover:text-teal-600 font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      title="Rafraîchir les données"
+    >
+      {refreshLoading ? (
+        <>
+          <ClipLoader size={14} color="#27a082" />
+          <span>Chargement...</span>
+        </>
+      ) : (
+        <>
+          <svg 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className={`transition-transform ${refreshLoading ? 'animate-spin' : ''}`}
+          >
+            <path 
+              d="M12 4V1L8 5L12 9V6C15.31 6 18 8.69 18 12C18 13.01 17.75 13.97 17.3 14.8L18.76 16.26C19.54 15.03 20 13.57 20 12C20 7.58 16.42 4 12 4ZM12 18C8.69 18 6 15.31 6 12C6 10.99 6.25 10.03 6.7 9.2L5.24 7.74C4.46 8.97 4 10.43 4 12C4 16.42 7.58 20 12 20V23L16 19L12 15V18Z" 
+              fill="currentColor"
+            />
+          </svg>
+          <span>Rafraîchir</span>
+        </>
+      )}
+    </button>
+  );
+};
 
 function Methode() {
   return (

@@ -2,10 +2,13 @@ import { motion } from "framer-motion";
 import { Plus, Send, Trash2, Edit2, X, Check, Info, AlertTriangle, Calendar, BookOpen, Tag, Clock } from 'lucide-react';
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
+import { useRhService } from "../../hooks/rh/useRhService";
+import { toast } from "sonner";
 
 interface DrawerProps {
     isOpen: boolean;
     onClose: () => void;
+    onInteractionCreated?: () => void;
 }
 
 
@@ -14,10 +17,16 @@ const allTags = [
     'Politique interne', 'Santé', 'Sécurité', 'Projet', 'Deadline'
 ];
 
-export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) {
+export default function DrawerAddInteractions({ isOpen, onClose, onInteractionCreated }: DrawerProps) {
     const [sendInvitation, setSendInvitation] = useState(false);
     const [activeTab, setActiveTab] = useState("General");
     const [loading, setLoading] = useState(false);
+    const { createInteractionRh, loading: serviceLoading } = useRhService();
+    const [formData, setFormData] = useState({
+        titre: "",
+        message: "",
+        date: "",
+    });
 
     useEffect(() => {
         if (isOpen) {
@@ -36,7 +45,7 @@ export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) 
     const renderComponent = () => {
         switch (activeTab) {
             case "General":
-                return <PrimaryComponent />;
+                return <PrimaryComponent formData={formData} setFormData={setFormData} />;
             case "Conge":
                 return <ContactComponent />;
             case "Administration":
@@ -49,7 +58,40 @@ export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) 
     const handleClose = () => {
         setActiveTab("General");
         setSendInvitation(false);
+        setFormData({ titre: "", message: "", date: "" });
         onClose();
+    };
+
+    const handleSave = async () => {
+        if (!formData.titre.trim() || !formData.message.trim()) {
+            toast.error("Veuillez remplir le titre et le message");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const payload: any = {
+                titre: formData.titre.trim(),
+                message: formData.message.trim(),
+            };
+
+            if (formData.date) {
+                // Convertir datetime-local en ISO string
+                const dateValue = new Date(formData.date);
+                if (!Number.isNaN(dateValue.valueOf())) {
+                    payload.date = dateValue.toISOString();
+                }
+            }
+
+            await createInteractionRh(payload);
+            toast.success("Interaction créée avec succès");
+            handleClose();
+            onInteractionCreated?.();
+        } catch (err: any) {
+            toast.error(err?.message || "Erreur lors de la création de l'interaction");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -66,8 +108,12 @@ export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) 
             >
                 <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <button className="bg-[#27a082] hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors">
-                            ✓ Save
+                        <button 
+                            onClick={handleSave}
+                            disabled={loading || serviceLoading}
+                            className="bg-[#27a082] hover:bg-teal-600 text-white px-6 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading || serviceLoading ? "Enregistrement..." : "✓ Enregistrer"}
                         </button>
                         <h1 className="text-xl font-normal text-gray-700">Nouvelle interaction</h1>
                     </div>
@@ -90,11 +136,11 @@ export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) 
                 </header>
 
                 <div className="flex h-full overflow-hidden relative">
-                    {loading && (
+                    {(loading || serviceLoading) && (
                         <div className="absolute inset-0 flex items-center justify-center bg-white z-50">
                             <ClipLoader
                                 color="#27a082"
-                                loading={loading}
+                                loading={loading || serviceLoading}
                                 size={40}
                                 speedMultiplier={3}
                                 aria-label="Chargement..."
@@ -127,111 +173,51 @@ export default function DrawerAddInteractions({ isOpen, onClose }: DrawerProps) 
 }
 
 
-function PrimaryComponent() {
+function PrimaryComponent({ formData, setFormData }: { formData: any; setFormData: any }) {
     return (
         <>
             <div className="bg-white space-y-5">
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                     <div>
-                        <label htmlFor="title" className="block text-brand-gray-700 text-sm font-medium mb-1">Titre</label>
+                        <label htmlFor="title" className="block text-brand-gray-700 text-sm font-medium mb-1">Titre *</label>
                         <input
                             id="title"
                             type="text"
-                            // value={formData.title}
-                            // onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            value={formData.titre}
+                            onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                            placeholder="Titre de l'annonce..."
+                            placeholder="Titre de l'interaction..."
+                            required
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="content" className="block text-brand-gray-700 text-sm font-medium mb-1">Contenu</label>
+                        <label htmlFor="content" className="block text-brand-gray-700 text-sm font-medium mb-1">Message *</label>
                         <textarea
                             id="content"
-                            // value={formData.content}
-                            // onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                            value={formData.message}
+                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                             rows={5}
                             className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                            placeholder="Contenu de l'annonce..."
+                            placeholder="Message de l'interaction..."
+                            required
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label htmlFor="category" className="block text-brand-gray-700 text-sm font-medium mb-1">Catégorie</label>
-                            <select
-                                id="category"
-                                // value={formData.category}
-                                // onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
+                    <div>
+                        <label htmlFor="date" className="block text-brand-gray-700 text-sm font-medium mb-1">Date (optionnel)</label>
+                        <input
+                            id="date"
+                            type="datetime-local"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
                                        focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                            >
-                                <option value="info">Information</option>
-                                <option value="urgent">Urgent</option>
-                                <option value="event">Événement</option>
-                                <option value="policy">Politique</option>
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="relevantDate" className="block text-brand-gray-700 text-sm font-medium mb-1">Date concernée (optionnel)</label>
-                                <input
-                                    id="relevantDate"
-                                    type="date"
-                                    // value={formData.relevantDate}
-                                    // onChange={(e) => setFormData({ ...formData, relevantDate: e.target.value })}
-                                    className="w-full px-3 py-2 border border-brand-gray-300 rounded-md focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-shadow text-brand-gray-800"
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="category" className="block text-brand-gray-700 text-sm font-medium mb-1">Catégorie</label>
-                                <select
-                                    id="category"
-                                    // value={formData.category}
-                                    // onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-3 py-2 border border-brand-gray-300  focus:ring-2 focus:ring-brand-teal focus:border-brand-teal outline-none transition-shadow text-brand-gray-800"
-                                >
-                                    <option value="info">Information</option>
-                                    <option value="urgent">Urgent</option>
-                                    <option value="event">Événement</option>
-                                    <option value="policy">Politique</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label htmlFor="priority" className="block text-brand-gray-700 text-sm font-medium mb-1">Priorité</label>
-                            <select
-                                id="priority"
-                                // value={formData.priority}
-                                // onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 bg-white text-gray-700 
-                                       focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
-                            >
-                                <option value="normal">Normale</option>
-                                <option value="high">Élevée</option>
-                            </select>
-                        </div>
+                        />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-3">
-                        <motion.button
-                            type="submit"
-                            className="px-4 py-2 text-[14px] bg-gray-200 text-brand-gray-700 cursor-pointer px-3 py-2"
-                        >
-                            {/* <Check className="w-4 h-4" /> */}
-                            {'Annuler'}
-                        </motion.button>
-                        <motion.button
-                            type="submit"
-                            className="bg-[#27a082] text-[14px] cursor-pointer hover:bg-teal-600 text-white px-3 py-2"
-                        >
-                            {/* <Check className="w-4 h-4" /> */}
-                            {'Publier l\'annonce'}
-                        </motion.button>
-                    </div>
                 </form>
             </div>
         </>

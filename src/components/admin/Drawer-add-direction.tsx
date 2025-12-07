@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
-import type { CreateDirectionForm, Direction } from '../../types/validation.dto';
+import type { CreateDirectionForm, CreateDirectionDto, Direction } from '../../types/validation.dto';
 import { useRhService } from "../../hooks/rh/useRhService";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ export default function DrawerAddDirection({ isOpen, onClose, onCreated }: Drawe
         nom_directeur: "",
         code_direction: "",
         email_direction: "",
+        nb_personnel: 4, // Optionnel selon le backend
         numero_direction: "",
         business_email: "",
         business_phone: "",
@@ -92,7 +93,24 @@ export default function DrawerAddDirection({ isOpen, onClose, onCreated }: Drawe
         try {
             setSubmitLoading(true);
             setSubmitError(null);
-            const res = await createDirection(formData);
+            
+            // Convertir CreateDirectionForm en CreateDirectionDto (enlever id_direction et gérer les valeurs vides)
+            const { id_direction, ...dto } = formData;
+            const payload: CreateDirectionDto = {
+                ...dto,
+                // Filtrer les chaînes vides pour les champs optionnels
+                numero_direction: dto.numero_direction?.trim() || undefined,
+                business_email: dto.business_email?.trim() || undefined,
+                business_phone: dto.business_phone?.trim() || undefined,
+                directeur_email: dto.directeur_email?.trim() || undefined,
+                directeur_phone: dto.directeur_phone?.trim() || undefined,
+                nombre_bureau: dto.nombre_bureau?.trim() || undefined,
+                nombre_service: dto.nombre_service?.trim() || undefined,
+                motif_creation: dto.motif_creation?.trim() || undefined,
+                statut: dto.statut?.trim() || undefined,
+            };
+            
+            const res = await createDirection(payload);
             toast.success("Direction enregistrée avec succès !");
             if (onCreated && res) {
                 onCreated(res as Direction);
@@ -110,28 +128,23 @@ export default function DrawerAddDirection({ isOpen, onClose, onCreated }: Drawe
     };
 
     const validateForm = () => {
+        // Champs requis selon le backend (@IsNotEmpty)
         const requiredFields: (keyof CreateDirectionForm)[] = [
             "nom_direction",
             "code_direction",
+            "nom_directeur",
             "email_direction",
-            "numero_direction",
-            "business_email",
-            "business_phone",
-            "directeur_email",
-            "directeur_phone",
-            "nombre_bureau",
-            "nombre_service",
-            "motif_creation",
         ];
 
         for (const field of requiredFields) {
-            if (!formData[field] || formData[field].trim() === "") {
+            const value = formData[field];
+            if (!value || (typeof value === 'string' && value.trim() === "")) {
                 alert(`Le champ "${field}" est requis !`);
                 return false;
             }
         }
 
-        // Optionnel : validation email
+        // Validation des emails (seulement ceux qui sont remplis)
         const emailFields: (keyof CreateDirectionForm)[] = [
             "email_direction",
             "business_email",
@@ -139,11 +152,13 @@ export default function DrawerAddDirection({ isOpen, onClose, onCreated }: Drawe
         ];
 
         for (const field of emailFields) {
-            const value = formData[field] ?? "";
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-                alert(`Le champ "${field}" doit être un email valide !`);
-                return false;
+            const value = formData[field];
+            if (value && typeof value === 'string' && value.trim() !== "") {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    alert(`Le champ "${field}" doit être un email valide !`);
+                    return false;
+                }
             }
         }
 

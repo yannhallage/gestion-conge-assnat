@@ -6,6 +6,8 @@ import type {
   TypePersonnel,
 } from "../../types/validation.dto";
 import { useChefService } from "../../hooks/chefdeservice/useChefService";
+import { useRhService } from "../../hooks/rh/useRhService";
+import { useAuth } from "../../contexts/AuthContext";
 
 type PersonnelDetails = {
   id_personnel?: string;
@@ -16,6 +18,7 @@ type PersonnelDetails = {
   role_personnel?: RolePersonnel | string;
   type_personnel?: TypePersonnel | string;
   telephone_travail?: string;
+  matricule_personnel?: string;
   telephone_personnel?: string;
   telephone_contact_urgence?: string;
   nom_contact_urgence?: string;
@@ -23,21 +26,52 @@ type PersonnelDetails = {
   ville_personnel?: string;
   codepostal?: string;
   pays_personnel?: string;
+  date_naissance?: string;
   is_active?: boolean;
   id_service?: string;
+  nom_service?: string;
+  poste?: string;
+  type_contrat?: string;
+  date_embauche?: string;
+  date_fin_contrat?: string;
+  salaire_base?: number;
+  niveau_hierarchique?: string;
+  numero_cnps?: string;
+  banque_nom?: string;
+  banque_rib?: string;
 };
 
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   personnel: PersonnelDetails | null;
+  onPersonnelUpdated?: (personnel: PersonnelDetails) => void;
+  onInviteSuccess?: () => void;
 }
 
-export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: DrawerProps) {
+export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPersonnelUpdated, onInviteSuccess }: DrawerProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [serviceName, setServiceName] = useState<string | null>(null);
+  const [contrats, setContrats] = useState<any[]>([]);
+  const [paies, setPaies] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingContrats, setLoadingContrats] = useState(false);
+  const [loadingPaies, setLoadingPaies] = useState(false);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
+  // État local pour le personnel qui sera mis à jour dynamiquement
+  const [localPersonnel, setLocalPersonnel] = useState<PersonnelDetails | null>(personnel);
 
   const { invitePersonnel, loading: inviteLoading } = useChefService();
+  const { getServiceById, updatePersonnel, getContratsByPersonnel, getPaiesByPersonnel, getPersonnelDocumentsByPersonnel } = useRhService();
+
+  // Synchroniser l'état local avec les props
+  useEffect(() => {
+    setLocalPersonnel(personnel);
+  }, [personnel]);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,16 +93,127 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
 
   useEffect(() => {
     setInviteFeedback(null);
+    // console.log(personnel);
   }, [personnel]);
 
+  useEffect(() => {
+    const fetchServiceName = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_service) {
+        setServiceName(null);
+        return;
+      }
+
+      try {
+        const service = await getServiceById(currentPersonnel.id_service);
+        if (service && typeof service === 'object' && 'nom_service' in service) {
+          setServiceName(service.nom_service as string);
+        } else {
+          setServiceName(null);
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération du service:", err);
+        setServiceName(null);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_service) {
+      fetchServiceName();
+    } else {
+      setServiceName(null);
+    }
+  }, [localPersonnel?.id_service, personnel?.id_service, isOpen, getServiceById]);
+
+  useEffect(() => {
+    const fetchContrats = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel || isAdmin) {
+        setContrats([]);
+        return;
+      }
+
+      try {
+        setLoadingContrats(true);
+        const contratsData = await getContratsByPersonnel(currentPersonnel.id_personnel);
+        setContrats(Array.isArray(contratsData) ? contratsData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des contrats:", err);
+        setContrats([]);
+      } finally {
+        setLoadingContrats(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
+      fetchContrats();
+    } else {
+      setContrats([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getContratsByPersonnel, isAdmin]);
+
+  useEffect(() => {
+    const fetchPaies = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel || isAdmin) {
+        setPaies([]);
+        return;
+      }
+
+      try {
+        setLoadingPaies(true);
+        const paiesData = await getPaiesByPersonnel(currentPersonnel.id_personnel);
+        setPaies(Array.isArray(paiesData) ? paiesData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des paies:", err);
+        setPaies([]);
+      } finally {
+        setLoadingPaies(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
+      fetchPaies();
+    } else {
+      setPaies([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPaiesByPersonnel, isAdmin]);
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      const currentPersonnel = localPersonnel || personnel;
+      if (!currentPersonnel?.id_personnel || isAdmin) {
+        setDocuments([]);
+        return;
+      }
+
+      try {
+        setLoadingDocuments(true);
+        const documentsData = await getPersonnelDocumentsByPersonnel(currentPersonnel.id_personnel);
+        setDocuments(Array.isArray(documentsData) ? documentsData : []);
+      } catch (err) {
+        console.error("Erreur lors de la récupération des documents:", err);
+        setDocuments([]);
+      } finally {
+        setLoadingDocuments(false);
+      }
+    };
+
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
+      fetchDocuments();
+    } else {
+      setDocuments([]);
+    }
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPersonnelDocumentsByPersonnel, isAdmin]);
+
   const buildPayload = useCallback(() => {
-    if (!personnel) {
+    const currentPersonnel = localPersonnel || personnel;
+    if (!currentPersonnel) {
       return null;
     }
 
     const email =
-      (personnel.email_personnel ?? "").trim() ||
-      (personnel.email_travail ?? "").trim();
+      (currentPersonnel.email_personnel ?? "").trim() ||
+      (currentPersonnel.email_travail ?? "").trim();
 
     if (!email) {
       setInviteFeedback({
@@ -78,8 +223,8 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
       return null;
     }
 
-    const rawRole = ((personnel.role_personnel ?? "") as string).trim().toUpperCase();
-    const rawType = ((personnel.type_personnel ?? "") as string).trim().toUpperCase();
+    const rawRole = ((currentPersonnel.role_personnel ?? "") as string).trim().toUpperCase();
+    const rawType = ((currentPersonnel.type_personnel ?? "") as string).trim().toUpperCase();
 
     const allowedRoles: RolePersonnel[] = ["ADMIN", "RH", "CHEF_SERVICE", "EMPLOYE"];
     const allowedTypes: InvitePersonnelPayload["type_personnel"][] = ["PERMANENT", "CONTRACTUEL"];
@@ -93,47 +238,71 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
 
     return {
       email_personnel: email,
-      nom_personnel: (personnel.nom_personnel ?? "").trim(),
-      prenom_personnel: (personnel.prenom_personnel ?? "").trim(),
+      nom_personnel: (currentPersonnel.nom_personnel ?? "").trim(),
+      prenom_personnel: (currentPersonnel.prenom_personnel ?? "").trim(),
       role_personnel: normalizedRole,
       type_personnel: normalizedType,
     };
-  }, [personnel]);
+  }, [localPersonnel, personnel]);
 
   const handleInvite = useCallback(async () => {
     setInviteFeedback(null);
 
     const payload = buildPayload();
-    if (!payload) {
+    if (!payload || !localPersonnel?.id_personnel) {
       return;
     }
 
     try {
       await invitePersonnel(payload);
+      
+      // Activer le personnel après une invitation réussie
+      try {
+        await updatePersonnel(localPersonnel.id_personnel, { is_active: true });
+        // Mettre à jour l'état local pour refléter le changement dynamiquement
+        const updatedPersonnel = { ...localPersonnel, is_active: true };
+        setLocalPersonnel(updatedPersonnel);
+        
+        // Notifier le parent de la mise à jour
+        if (onPersonnelUpdated) {
+          onPersonnelUpdated(updatedPersonnel);
+        }
+      } catch (updateErr) {
+        console.error("Erreur lors de l'activation du personnel:", updateErr);
+      }
+      
       setInviteFeedback({
         type: "success",
-        message: "Invitation envoyée avec succès.",
+        message: "Invitation envoyée avec succès et personnel activé.",
       });
+      
+      // Appeler le callback de succès pour afficher le toast dans le parent
+      if (onInviteSuccess) {
+        onInviteSuccess();
+      }
     } catch (err: any) {
       setInviteFeedback({
         type: "error",
         message:
           err?.message ??
-          "Une erreur est survenue lors de l’envoi de l’invitation.",
+          "Une erreur est survenue lors de l'envoi de l'invitation.",
       });
     }
-  }, [buildPayload, invitePersonnel]);
+  }, [buildPayload, invitePersonnel, localPersonnel, updatePersonnel, onPersonnelUpdated, onInviteSuccess]);
 
   const handleClose = () => {
     onClose();
   };
 
-  const fullName = `${personnel?.nom_personnel ?? ""} ${personnel?.prenom_personnel ?? ""}`.trim();
+  // Utiliser localPersonnel au lieu de personnel pour l'affichage dynamique
+  const currentPersonnel = localPersonnel || personnel;
+  
+  const fullName = `${currentPersonnel?.nom_personnel ?? ""} ${currentPersonnel?.prenom_personnel ?? ""}`.trim();
   const displayName =
     fullName ||
-    (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim() ||
+    (currentPersonnel?.email_travail ?? currentPersonnel?.email_personnel ?? "").trim() ||
     "Employé";
-  const primaryEmail = (personnel?.email_travail ?? personnel?.email_personnel ?? "").trim();
+  const primaryEmail = (currentPersonnel?.email_travail ?? currentPersonnel?.email_personnel ?? "").trim();
   const initials =
     displayName
       .split(/\s+/)
@@ -163,27 +332,27 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
             <div className="min-w-0">
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-semibold text-gray-800 truncate">{displayName}</h1>
-                {typeof personnel?.is_active === "boolean" && (
+                {typeof currentPersonnel?.is_active === "boolean" && (
                   <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${personnel.is_active
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full ${currentPersonnel.is_active
                       ? "bg-green-100 text-green-700"
                       : "bg-red-100 text-red-700"
                     }`}
                   >
-                    {personnel.is_active ? "Actif" : "Inactif"}
+                    {currentPersonnel.is_active ? "Actif" : "Inactif"}
                   </span>
                 )}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                 {primaryEmail && <span className="truncate max-w-[220px]">{primaryEmail}</span>}
-                {personnel?.role_personnel && (
+                {currentPersonnel?.role_personnel && (
                   <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
-                    {String(personnel.role_personnel)}
+                    {String(currentPersonnel.role_personnel)}
                   </span>
                 )}
-                {personnel?.type_personnel && (
+                {currentPersonnel?.type_personnel && (
                   <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs font-medium uppercase tracking-wide">
-                    {String(personnel.type_personnel)}
+                    {String(currentPersonnel.type_personnel)}
                   </span>
                 )}
               </div>
@@ -196,7 +365,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
               data-tooltip-id="inviter"
               data-tooltip-content="Envoyer une invitation"
               onClick={handleInvite}
-              disabled={inviteLoading || !personnel}
+              disabled={inviteLoading || !currentPersonnel}
               title="Envoyer une invitation"
             >
               {inviteLoading ? (
@@ -253,7 +422,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
             </div>
           ) : (
             <div className="p-6 space-y-6">
-              {!personnel ? (
+              {!currentPersonnel ? (
                 <p className="text-sm text-gray-500">Sélectionnez un employé pour consulter ses informations.</p>
               ) : (
                 <>
@@ -261,39 +430,140 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel }: Dr
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                       Informations personnelles
                     </h2>
-                    <InfoRow label="Nom" value={`${personnel.nom_personnel ?? ""} ${personnel.prenom_personnel ?? ""}`.trim()} />
-                    <InfoRow label="Email professionnel" value={personnel.email_travail} />
-                    <InfoRow label="Email personnel" value={personnel.email_personnel} />
-                    <InfoRow label="Rôle" value={personnel.role_personnel} />
-                    <InfoRow label="Type" value={personnel.type_personnel} />
-                    <InfoRow label="Statut" value={personnel.is_active ? "Actif" : "Inactif"} />
+                    <InfoRow label="Nom" value={`${currentPersonnel.nom_personnel ?? ""} ${currentPersonnel.prenom_personnel ?? ""}`.trim()} />
+                    <InfoRow label="Matricule" value={currentPersonnel.matricule_personnel} />
+                    <InfoRow label="Date de naissance" value={formatDate(currentPersonnel.date_naissance)} />
+                    <InfoRow label="Email professionnel" value={currentPersonnel.email_travail} />
+                    <InfoRow label="Email personnel" value={currentPersonnel.email_personnel} />
+                    <InfoRow label="Rôle" value={currentPersonnel.role_personnel} />
+                    <InfoRow label="Type" value={currentPersonnel.type_personnel} />
+                    <InfoRow label="Service" value={serviceName || currentPersonnel.nom_service} />
+                    <InfoRow label="Statut" value={currentPersonnel.is_active ? "Actif" : "Inactif"} />
                   </section>
 
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                       Coordonnées
                     </h2>
-                    <InfoRow label="Téléphone professionnel" value={personnel.telephone_travail} />
-                    <InfoRow label="Téléphone personnel" value={personnel.telephone_personnel} />
+                    <InfoRow label="Téléphone professionnel" value={currentPersonnel.telephone_travail} />
+                    <InfoRow label="Téléphone personnel" value={currentPersonnel.telephone_personnel} />
                   </section>
 
                     <section className="space-y-3">
                       <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
                         Adresse
                       </h2>
-                      <InfoRow label="Adresse" value={personnel.adresse_personnel} />
-                      <InfoRow label="Ville" value={personnel.ville_personnel} />
-                      <InfoRow label="Code postal" value={personnel.codepostal} />
-                      <InfoRow label="Pays" value={personnel.pays_personnel} />
+                      <InfoRow label="Adresse" value={currentPersonnel.adresse_personnel} />
+                      <InfoRow label="Ville" value={currentPersonnel.ville_personnel} />
+                      <InfoRow label="Code postal" value={currentPersonnel.codepostal} />
+                      <InfoRow label="Pays" value={currentPersonnel.pays_personnel} />
                     </section>
 
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                      Contact d’urgence
+                      Contact d'urgence
                     </h2>
-                    <InfoRow label="Nom" value={personnel.nom_contact_urgence} />
-                    <InfoRow label="Téléphone" value={personnel.telephone_contact_urgence} />
+                    <InfoRow label="Nom" value={currentPersonnel.nom_contact_urgence} />
+                    <InfoRow label="Téléphone" value={currentPersonnel.telephone_contact_urgence} />
                   </section>
+
+                  <section className="space-y-3">
+                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      Informations professionnelles
+                    </h2>
+                    <InfoRow label="Poste" value={currentPersonnel.poste} />
+                    <InfoRow label="Type de contrat" value={currentPersonnel.type_contrat} />
+                    <InfoRow label="Date d'embauche" value={formatDate(currentPersonnel.date_embauche)} />
+                    <InfoRow label="Date de fin de contrat" value={formatDate(currentPersonnel.date_fin_contrat)} />
+                    {!isAdmin && (
+                      <>
+                        <InfoRow 
+                          label="Salaire de base" 
+                          value={currentPersonnel.salaire_base ? new Intl.NumberFormat("fr-FR", {
+                            style: "currency",
+                            currency: "XOF",
+                            minimumFractionDigits: 0,
+                          }).format(currentPersonnel.salaire_base) : undefined} 
+                        />
+                        <InfoRow label="Niveau hiérarchique" value={currentPersonnel.niveau_hierarchique} />
+                        <InfoRow label="Numéro CNPS" value={currentPersonnel.numero_cnps} />
+                        <InfoRow label="Banque" value={currentPersonnel.banque_nom} />
+                        <InfoRow label="RIB" value={currentPersonnel.banque_rib} />
+                      </>
+                    )}
+                    {isAdmin && (
+                      <>
+                        <InfoRow label="Niveau hiérarchique" value={currentPersonnel.niveau_hierarchique} />
+                      </>
+                    )}
+                  </section>
+
+                  {!isAdmin && (
+                    <>
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Contrats
+                        </h2>
+                        {loadingContrats ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : contrats.length > 0 ? (
+                          <div className="space-y-2">
+                            {contrats.map((contrat, index) => (
+                              <ContratCard key={contrat.id_contrat || index} contrat={contrat} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucun contrat enregistré
+                          </div>
+                        )}
+                      </section>
+
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Paies
+                        </h2>
+                        {loadingPaies ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : paies.length > 0 ? (
+                          <div className="space-y-2">
+                            {paies.map((paie, index) => (
+                              <PaieCard key={paie.id_paie || index} paie={paie} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucune paie enregistrée
+                          </div>
+                        )}
+                      </section>
+
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Documents
+                        </h2>
+                        {loadingDocuments ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : documents.length > 0 ? (
+                          <div className="space-y-2">
+                            {documents.map((document, index) => (
+                              <DocumentCard key={document.id_document || index} document={document} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucun document enregistré
+                          </div>
+                        )}
+                      </section>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -320,6 +590,257 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
     <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded px-4 py-3">
       <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
       <span className="text-sm text-gray-800">{value?.trim() ? value : "Non renseigné"}</span>
+    </div>
+  );
+}
+
+function formatDate(dateString?: string): string {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+function formatDateShort(dateString?: string): string {
+  if (!dateString) return "";
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+function ContratCard({ contrat }: { contrat: any }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {contrat.type_contrat || "N/A"}
+            </span>
+            {contrat.statut && (
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                contrat.statut.toLowerCase().includes("actif") 
+                  ? "bg-green-100 text-green-700" 
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                {contrat.statut}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-500">Début: </span>
+              <span className="text-gray-800 font-medium">{formatDateShort(contrat.date_debut)}</span>
+            </div>
+            {contrat.date_fin && (
+              <div>
+                <span className="text-gray-500">Fin: </span>
+                <span className="text-gray-800 font-medium">{formatDateShort(contrat.date_fin)}</span>
+              </div>
+            )}
+          </div>
+          {contrat.salaire_reference && (
+            <div className="text-sm">
+              <span className="text-gray-500">Salaire de référence: </span>
+              <span className="text-gray-800 font-medium">
+                {new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(contrat.salaire_reference)}
+              </span>
+            </div>
+          )}
+        </div>
+        {contrat.url_contrat && (
+          <a
+            href={contrat.url_contrat}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le contrat"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PaieCard({ paie }: { paie: any }) {
+  const mois = [
+    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+  ];
+
+  const moisLabel = paie.mois ? mois[paie.mois - 1] : "N/A";
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-800">
+              {moisLabel} {paie.annee || ""}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-500">Brut: </span>
+              <span className="text-gray-800 font-medium">
+                {paie.salaire_brut ? new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(paie.salaire_brut) : "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500">Net: </span>
+              <span className="text-gray-800 font-medium">
+                {paie.salaire_net ? new Intl.NumberFormat("fr-FR", {
+                  style: "currency",
+                  currency: "XOF",
+                  minimumFractionDigits: 0,
+                }).format(paie.salaire_net) : "N/A"}
+              </span>
+            </div>
+          </div>
+          {(paie.primes || paie.deductions) && (
+            <div className="flex gap-4 text-sm">
+              {paie.primes && (
+                <div>
+                  <span className="text-gray-500">Primes: </span>
+                  <span className="text-green-600 font-medium">
+                    +{new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "XOF",
+                      minimumFractionDigits: 0,
+                    }).format(paie.primes)}
+                  </span>
+                </div>
+              )}
+              {paie.deductions && (
+                <div>
+                  <span className="text-gray-500">Déductions: </span>
+                  <span className="text-red-600 font-medium">
+                    -{new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "XOF",
+                      minimumFractionDigits: 0,
+                    }).format(paie.deductions)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {paie.url_bulletin && (
+          <a
+            href={paie.url_bulletin}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le bulletin"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DocumentCard({ document }: { document: any }) {
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'CNI': 'Carte Nationale d\'Identité',
+      'CONTRAT': 'Contrat',
+      'DIPLOME': 'Diplôme',
+      'ATTestation': 'Attestation',
+    };
+    return labels[type] || type;
+  };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {getTypeLabel(document.type_document || "N/A")}
+            </span>
+          </div>
+        </div>
+        {document.url_document && (
+          <a
+            href={document.url_document}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-teal-600 hover:text-teal-700 transition-colors"
+            title="Télécharger le document"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
     </div>
   );
 }

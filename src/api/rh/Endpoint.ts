@@ -24,7 +24,39 @@ export const ENDPOINTS_RH = {
 
     // Demandes de congé
     getDemandes: '/rh/demandes',                    // GET
+    getHistoriqueDemandes: '/rh/demandes/historique', // GET
 
-    // (Alertes désactivées pour l’instant)
+    // Interactions RH
+    createInteractionRh: '/rh/interactions-rh',    // POST
+    getAllInteractionsRh: '/rh/interactions-rh',   // GET
+    deleteInteractionRh: (id: string) => `/rh/interactions-rh/${id}`, // DELETE
+
+    // Contrats
+    createContrat: '/rh/contrats',                 // POST
+    getAllContrats: '/rh/contrats',                // GET
+    getContratById: (id: string) => `/rh/contrats/${id}`, // GET
+    getContratsByPersonnel: (idPersonnel: string) => `/rh/personnels/${idPersonnel}/contrats`, // GET
+    updateContrat: (id: string) => `/rh/contrats/${id}`,   // PUT
+    deleteContrat: (id: string) => `/rh/contrats/${id}`,   // DELETE
+
+    // Paies
+    createPaie: '/rh/paies',                       // POST
+    getAllPaies: '/rh/paies',                      // GET
+    getPaieById: (id: string) => `/rh/paies/${id}`, // GET
+    getPaiesByPersonnel: (idPersonnel: string) => `/rh/personnels/${idPersonnel}/paies`, // GET
+    getPaiesByMoisAnnee: (mois: string, annee: string) => `/rh/paies/mois/${mois}/annee/${annee}`, // GET
+    updatePaie: (id: string) => `/rh/paies/${id}`, // PUT
+    deletePaie: (id: string) => `/rh/paies/${id}`, // DELETE
+
+    // Documents du Personnel
+    createPersonnelDocument: '/rh/personnels/documents',                 // POST
+    getAllPersonnelDocuments: '/rh/personnels/documents',                // GET
+    getPersonnelDocumentById: (id: string) => `/rh/personnels/documents/${id}`, // GET
+    getPersonnelDocumentsByPersonnel: (idPersonnel: string) => `/rh/personnels/${idPersonnel}/documents`, // GET
+    getPersonnelDocumentsByType: (idPersonnel: string, type: string) => `/rh/personnels/${idPersonnel}/documents/type/${type}`, // GET
+    updatePersonnelDocument: (id: string) => `/rh/personnels/documents/${id}`,   // PUT
+    deletePersonnelDocument: (id: string) => `/rh/personnels/documents/${id}`,   // DELETE
+
+    // (Alertes désactivées pour l'instant)
     // createAlert: '/rh/alerts',                    // POST
 };

@@ -1,19 +1,154 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { ClipLoader } from "react-spinners";
+import { useUserService } from "../../../../hooks/employes/useUserService";
+import { USER_STORAGE_KEY } from "../../../../secure/storageKeys";
 // import DropDownMenu from "../../../../components/drop-down";
 
 const DisponibilitesFeature = () => {
+    const [userId, setUserId] = useState<string | null>(null);
+    const { getDisponibilite, error } = useUserService(userId);
+    const [disponibilite, setDisponibilite] = useState<number | null>(null);
+    const [loadingData, setLoadingData] = useState(true);
+
+    const DEFAULT_DISPO = 45; // Disponibilité par défaut
+
+    useEffect(() => {
+        // Récupérer l'ID utilisateur depuis le localStorage
+        try {
+            const userData = localStorage.getItem(USER_STORAGE_KEY);
+            if (userData) {
+                const parsed = JSON.parse(userData);
+                setUserId(parsed.id);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        }
+    }, []);
+
+    useEffect(() => {
+        const loadDisponibilite = async () => {
+            if (!userId) return;
+            try {
+                setLoadingData(true);
+                const data = await getDisponibilite(userId);
+
+                // La réponse du backend est sous la forme {"disponibilité_day": 40}
+                const dispoValue = data?.disponibilité_day ?? data?.disponibilite ?? data?.jours_disponibles ?? 0;
+                setDisponibilite(Number(dispoValue) || 0);
+            } catch (err: any) {
+                console.error("Erreur lors du chargement de la disponibilité :", err);
+            } finally {
+                setLoadingData(false);
+            }
+        };
+
+        if (userId) {
+            loadDisponibilite();
+        }
+    }, [userId, getDisponibilite]);
+
+    const dispoRestante = disponibilite !== null ? Number(disponibilite) : DEFAULT_DISPO;
+    const dispoUtilisee = disponibilite !== null ? DEFAULT_DISPO - Number(disponibilite) : 0;
+
+    const chartData = [
+        { name: "Disponibilité restante", value: dispoRestante, color: "#27a082" },
+        { name: "Disponibilité utilisée", value: dispoUtilisee, color: "#e5e7eb" },
+    ];
+
     return (
         <div className="h-full flex flex-col bg-white">
             <header className="border-b border-gray-200  px-5 py-3">
                 <h1 className="text-xl text-gray-800">Disponibilités</h1>
             </header>
 
-            <div className="">
-                <AbsenceTypes />
-                {/* <DropDownMenu /> */}
+            <div className="p-6">
+                {loadingData ? (
+                    <div className="flex items-center justify-center py-12">
+                        <ClipLoader size={40} color="#27a082" speedMultiplier={1.5} />
+                    </div>
+                ) : error ? (
+                    <div className="bg-rose-50 border border-rose-400 text-rose-700 px-4 py-3 rounded">
+                        {error}
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Vue d'ensemble</h2>
+                            <div className="flex flex-col md:flex-row items-center gap-8">
+                                <div className="flex-1">
+                                    <ResponsiveContainer width="100%" height={300}>
+                                        <PieChart>
+                                            <Pie
+                                                data={chartData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                startAngle={90}
+                                                endAngle={-270}
+                                            >
+                                                {chartData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value: number) => [`${value} jours`, ""]}
+                                                contentStyle={{
+                                                    backgroundColor: "#fff",
+                                                    border: "1px solid #e5e7eb",
+                                                    borderRadius: "6px",
+                                                }}
+                                            />
+                                            <Legend
+                                                verticalAlign="bottom"
+                                                height={36}
+                                                formatter={(value) => (
+                                                    <span className="text-sm text-gray-700">{value}</span>
+                                                )}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                                        <div className="text-sm text-emerald-600 font-medium mb-1">
+                                            Disponibilité restante
+                                        </div>
+                                        <div className="text-3xl font-bold text-emerald-700">
+                                            {dispoRestante} jours
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                        <div className="text-sm text-gray-600 font-medium mb-1">
+                                            Disponibilité utilisée
+                                        </div>
+                                        <div className="text-3xl font-bold text-gray-700">
+                                            {dispoUtilisee} jours
+                                        </div>
+                                    </div>
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div className="text-sm text-blue-600 font-medium mb-1">
+                                            Disponibilité totale
+                                        </div>
+                                        <div className="text-3xl font-bold text-blue-700">
+                                            {DEFAULT_DISPO} jours
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <AbsenceTypes 
+                            dispoAnnuelle={DEFAULT_DISPO}
+                            dispoUtilisee={dispoUtilisee}
+                            dispoRestante={dispoRestante}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -21,14 +156,20 @@ const DisponibilitesFeature = () => {
 
 export default DisponibilitesFeature;
 
-function AbsenceTypes() {
-    const [year] = useState(2025);
+interface AbsenceTypesProps {
+    dispoAnnuelle: number;
+    dispoUtilisee: number;
+    dispoRestante: number;
+}
+
+function AbsenceTypes({ dispoAnnuelle, dispoUtilisee, dispoRestante }: AbsenceTypesProps) {
+    const [year] = useState(new Date().getFullYear());
     const [person] = useState("admin orathsa");
 
     const absences = [
-        { type: "Annual leave", color: "bg-[#2b4c7e]", days: 16, total: 20 },
-        { type: "Remote work", color: "bg-[#cfd8f0]", days: "∞" },
-        { type: "Sick leave", color: "bg-[#3b9d78]", days: "∞" },
+        { type: "Congés annuels", color: "bg-[#2b4c7e]", days: dispoAnnuelle, total: dispoAnnuelle },
+        { type: "Congés pris", color: "bg-[#cfd8f0]", days: dispoUtilisee, total: dispoAnnuelle },
+        { type: "Congés restants", color: "bg-[#3b9d78]", days: dispoRestante, total: dispoAnnuelle },
     ];
 
     return (
@@ -72,12 +213,14 @@ function AbsenceTypes() {
                         <div className="flex-1 max-w-[60%] ml-6">
                             <div className="w-full bg-gray-100  h-8 flex items-center justify-center overflow-hidden">
                                 <div
-                                    className={`h-8 ${a.days !== "∞" ? "bg-emerald-100" : "bg-emerald-100"}  flex items-center justify-center`}
+                                    className={`h-8 ${a.color} flex items-center justify-center`}
                                     style={{
-                                        width: a.days !== "∞" ? `${(a.days / (a.total || 20)) * 100}%` : "100%",
+                                        width: typeof a.days === "number" && a.total > 0
+                                            ? `${(a.days / a.total) * 100}%` 
+                                            : "100%",
                                     }}
                                 >
-                                    <span className="text-[13px] text-[#2b4c7e] font-medium">
+                                    <span className="text-[13px] text-white font-medium">
                                         {a.days}d
                                     </span>
                                 </div>

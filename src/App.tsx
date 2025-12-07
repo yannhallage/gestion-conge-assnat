@@ -28,6 +28,7 @@ function App() {
           {RoleRoutes("user")}
           {RoleRoutes("admin")}
           {RoleRoutes("rh")}
+          {RoleRoutes("compta_admin")}
           {/* {RoleRoutes("chef")} */}
 
           {/* Page 404 */}

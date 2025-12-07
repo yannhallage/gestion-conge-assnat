@@ -1,46 +1,126 @@
 import { useEffect, useState } from "react";
 import { ClipLoader } from "react-spinners";
+import { notificationService, type Notification } from "../services/notifications/notification.service";
+import { usePusherNotifications } from "../hooks/notifications/usePusherNotifications";
+import { useAuth } from "../contexts/AuthContext";
+import { pusherService } from "../services/pusher/pusher.service";
 
 interface DrawerProps {
     isOpen: boolean;
     onClose: () => void;
 }
-export default function DrawerNotifications({ isOpen, onClose }: DrawerProps) {
-    const [sendInvitation, setSendInvitation] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [notifications, setNotifications] = useState<
-        { id: number; title: string; message: string; date: string }[]
-    >([]);
 
-    // 🧠 Simulation du chargement de notifications
+// Fonction pour formater la date
+const formatDate = (dateString?: string): string => {
+    if (!dateString) return "Date inconnue";
+    
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        if (diffInMinutes < 1) {
+            return "À l'instant";
+        } else if (diffInMinutes < 60) {
+            return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+        } else if (diffInHours < 24) {
+            return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+        } else if (diffInDays === 1) {
+            return "Hier";
+        } else if (diffInDays < 7) {
+            return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+        } else {
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+        }
+    } catch {
+        return dateString;
+    }
+};
+
+export default function DrawerNotifications({ isOpen, onClose }: DrawerProps) {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const { user } = useAuth();
+    const { refreshUnreadCount } = usePusherNotifications();
+
+    // 🧠 Chargement des notifications depuis l'API
     useEffect(() => {
         if (isOpen) {
             setLoading(true);
-            const timer = setTimeout(() => {
-                // 👇 Change ce tableau par un appel API plus tard
-                const data = [
-                    {
-                        id: 1,
-                        title: "Mise à jour des congés",
-                        message:
-                            "Le service RH informe que les congés doivent être validés avant le 31 octobre.",
-                        date: "Aujourd'hui à 09:30",
-                    },
-                    {
-                        id: 2,
-                        title: "Nouvelle politique de télétravail",
-                        message:
-                            "À partir du 1er novembre, un jour supplémentaire de télétravail sera possible chaque semaine.",
-                        date: "Hier à 16:45",
-                    },
-                ];
-                setNotifications(data);
-                setLoading(false);
-            }, 700);
-
-            return () => clearTimeout(timer);
+            setError(null);
+            
+            notificationService
+                .getNotifications()
+                .then((data) => {
+                    // Transformer les données pour s'assurer qu'elles ont le bon format
+                    const formattedNotifications = data.map((notif) => ({
+                        ...notif,
+                        date: notif.date || formatDate(notif.created_at),
+                    }));
+                    setNotifications(formattedNotifications);
+                })
+                .catch((err) => {
+                    console.error("Erreur lors du chargement des notifications:", err);
+                    setError(err.message || "Erreur lors du chargement des notifications");
+                    setNotifications([]);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        } else {
+            // Réinitialiser l'état quand le drawer se ferme
+            setNotifications([]);
+            setError(null);
         }
     }, [isOpen]);
+
+    // 📡 Écouter les nouvelles notifications Pusher
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const channelName = `user-${user.id}`;
+        
+        const handleNewNotification = (data: any) => {
+            // Transformer la notification Pusher en format Notification
+            const newNotif: Notification = {
+                id: data.id_notification,
+                title: data.titre,
+                message: data.message,
+                date: formatDate(data.date_creation),
+                isLu: data.is_lu || false,
+                created_at: data.date_creation,
+            };
+
+            // Ajouter la notification en haut de la liste
+            setNotifications((prev) => {
+                // Vérifier si elle n'existe pas déjà
+                if (prev.some(n => n.id === newNotif.id)) {
+                    return prev;
+                }
+                return [newNotif, ...prev];
+            });
+
+            // Rafraîchir le compteur de notifications non lues
+            refreshUnreadCount();
+        };
+
+        // S'abonner aux notifications Pusher
+        const unsubscribe = pusherService.subscribe(channelName, handleNewNotification);
+
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+            }
+        };
+    }, [user?.id, refreshUnreadCount]);
 
     // Empêche le scroll en arrière-plan
     useEffect(() => {
@@ -48,8 +128,32 @@ export default function DrawerNotifications({ isOpen, onClose }: DrawerProps) {
     }, [isOpen]);
 
     const handleClose = () => {
-        setSendInvitation(false);
         onClose();
+    };
+
+    // Marquer une notification comme lue
+    const handleMarkAsRead = async (id: string | number) => {
+        try {
+            await notificationService.markAsRead(id.toString());
+            // Mettre à jour l'état local
+            setNotifications((prev) =>
+                prev.map((notif) =>
+                    notif.id === id ? { ...notif, isLu: true } : notif
+                )
+            );
+            // Rafraîchir le compteur
+            refreshUnreadCount();
+        } catch (err) {
+            console.error("Erreur lors du marquage de la notification:", err);
+        }
+    };
+
+    // Gérer le clic sur une notification
+    const handleNotificationClick = (notif: Notification) => {
+        // Si la notification n'est pas encore lue, la marquer comme lue
+        if (!notif.isLu) {
+            handleMarkAsRead(notif.id);
+        }
     };
 
     return (
@@ -103,28 +207,109 @@ export default function DrawerNotifications({ isOpen, onClose }: DrawerProps) {
                     )}
 
                     <main className="flex-1 p-6 overflow-y-auto">
+                        {/* Affichage des erreurs */}
+                        {error && (
+                            <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                                {error}
+                            </div>
+                        )}
+
                         {/* Si pas de notifications */}
-                        {!loading && notifications.length === 0 && <AucuneHistorique />}
+                        {!loading && !error && notifications.length === 0 && <AucuneHistorique />}
 
                         {/* Si notifications disponibles */}
                         {!loading &&
-                            notifications.length > 0 &&
-                            notifications.map((notif) => (
-                                <div
-                                    key={notif.id}
-                                    className="p-4 mb-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
-                                >
-                                    <h3 className="font-semibold text-gray-800">
-                                        {notif.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                        {notif.message}
-                                    </p>
-                                    <span className="text-xs text-gray-400 mt-2 block">
-                                        {notif.date}
-                                    </span>
+                            !error &&
+                            notifications.length > 0 && (
+                                <div className="space-y-3">
+                                    {notifications.map((notif) => (
+                                        <div
+                                            key={notif.id}
+                                            onClick={() => handleNotificationClick(notif)}
+                                            className={`group relative flex gap-4 p-4 rounded-lg transition-all duration-200 cursor-pointer ${
+                                                !notif.isLu
+                                                    ? "bg-gradient-to-r from-emerald-50/50 to-white hover:from-emerald-50 hover:to-emerald-50/30 shadow-sm border-l-4 border-l-[#27a082]"
+                                                    : "bg-white hover:bg-gray-50 border-l-4 border-l-transparent hover:border-l-gray-300 shadow-sm"
+                                            }`}
+                                        >
+                                            {/* Indicateur non lue */}
+                                            {!notif.isLu && (
+                                                <div className="absolute top-4 right-4">
+                                                    <div className="w-2.5 h-2.5 bg-[#27a082] rounded-full animate-pulse"></div>
+                                                </div>
+                                            )}
+
+                                            {/* Icône de notification */}
+                                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                                                !notif.isLu 
+                                                    ? "bg-emerald-100 text-[#27a082]" 
+                                                    : "bg-gray-100 text-gray-400"
+                                            }`}>
+                                                <svg
+                                                    className="w-5 h-5"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                                                    />
+                                                </svg>
+                                            </div>
+
+                                            {/* Contenu */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between gap-2 mb-1">
+                                                    <h3 className={`text-base font-semibold leading-tight ${
+                                                        !notif.isLu 
+                                                            ? "text-gray-900" 
+                                                            : "text-gray-700"
+                                                    }`}>
+                                                        {notif.title}
+                                                    </h3>
+                                                </div>
+                                                
+                                                <p className={`text-sm leading-relaxed mt-1.5 ${
+                                                    !notif.isLu 
+                                                        ? "text-gray-700" 
+                                                        : "text-gray-600"
+                                                }`}>
+                                                    {notif.message}
+                                                </p>
+
+                                                <div className="flex items-center justify-between mt-3">
+                                                    <span className="text-xs font-medium text-gray-400 flex items-center gap-1">
+                                                        <svg
+                                                            className="w-3.5 h-3.5"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                            />
+                                                        </svg>
+                                                        {notif.date}
+                                                    </span>
+                                                    
+                                                    {!notif.isLu && (
+                                                        <span className="px-2 py-0.5 text-xs font-medium text-[#27a082] bg-emerald-100 rounded-full">
+                                                            Nouveau
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
                     </main>
                 </div>
             </div>

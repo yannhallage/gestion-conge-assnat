@@ -14,8 +14,17 @@ interface DrawerProps {
 
 type ServiceFormState = Omit<CreateServiceDto, "nb_personnel"> & { nb_personnel?: number | ""; };
 
+type PersonnelOption = {
+    id_personnel: string;
+    nom_personnel?: string;
+    prenom_personnel?: string;
+    email_travail?: string;
+};
+
 export default function DrawerAddService({ isOpen, onClose, directions, onCreated }: DrawerProps) {
-    const { createService } = useRhService();
+    const { createService, getAllPersonnel } = useRhService();
+    const [personnelList, setPersonnelList] = useState<PersonnelOption[]>([]);
+    const [loadingPersonnel, setLoadingPersonnel] = useState(false);
 
     const [loadingSkeleton, setLoadingSkeleton] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -31,6 +40,27 @@ export default function DrawerAddService({ isOpen, onClose, directions, onCreate
             return () => clearTimeout(timer);
         }
     }, [isOpen, directions]);
+
+    // Récupérer la liste du personnel au montage et quand le drawer s'ouvre
+    useEffect(() => {
+        const fetchPersonnel = async () => {
+            try {
+                setLoadingPersonnel(true);
+                const personnel = await getAllPersonnel();
+                const personnelArray = Array.isArray(personnel) ? personnel : [];
+                setPersonnelList(personnelArray);
+            } catch (err: any) {
+                console.error("Erreur lors de la récupération du personnel:", err);
+                setPersonnelList([]);
+            } finally {
+                setLoadingPersonnel(false);
+            }
+        };
+
+        if (isOpen) {
+            fetchPersonnel();
+        }
+    }, [isOpen, getAllPersonnel]);
 
     useEffect(() => {
         document.body.style.overflow = isOpen ? "hidden" : "auto";
@@ -60,7 +90,9 @@ export default function DrawerAddService({ isOpen, onClose, directions, onCreate
             nom_service: formData.nom_service.trim(),
             code_service: formData.code_service.trim(),
             id_direction: formData.id_direction,
-            nb_personnel: formData.nb_personnel === "" ? undefined : formData.nb_personnel,
+            ...(formData.id_chefdeservice && formData.id_chefdeservice.trim() 
+                ? { id_chefdeservice: formData.id_chefdeservice.trim() } 
+                : {}),
         };
 
         try {
@@ -179,6 +211,28 @@ export default function DrawerAddService({ isOpen, onClose, directions, onCreate
                                     </select>
                                 }
                             />
+                                <FormRow
+                                    label="Chef de service"
+                                    input={
+                                        <select
+                                            value={formData.id_chefdeservice || ""}
+                                            onChange={(e) => handleChange("id_chefdeservice", e.target.value)}
+                                            disabled={loadingPersonnel}
+                                            className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                        >
+                                            <option value="">Sélectionner un chef de service</option>
+                                            {personnelList.map((personnel) => {
+                                                const fullName = `${personnel.prenom_personnel ?? ""} ${personnel.nom_personnel ?? ""}`.trim();
+                                                const displayName = fullName || personnel.email_travail || "Personnel";
+                                                return (
+                                                    <option key={personnel.id_personnel} value={personnel.id_personnel}>
+                                                        {displayName}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                    }
+                                />
                             <FormRow
                                 label="Nombre de personnel"
                                 input={
@@ -211,7 +265,8 @@ function initialFormState(directions: Direction[]): ServiceFormState {
         nom_service: "",
         code_service: "",
         id_direction: directions[0]?.id_direction ?? "",
-        nb_personnel: "",
+        nb_personnel: undefined,
+        id_chefdeservice: "",
     };
 }
 

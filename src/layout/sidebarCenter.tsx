@@ -4,14 +4,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 interface LayoutProps {
   children?: ReactNode;
-  role: "user" | "admin" | "rh";
+  role: "user" | "admin" | "rh" | "compta_admin";
 }
 
 export default function SidebarCenter({ children, role }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeItem, setActiveItem] = useState<string>("");
-  const [DomaineName, setDomaineName] = useState<"user" | "admin" | "rh">(role);
+  const [DomaineName, _] = useState<"user" | "admin" | "rh" | "compta_admin">(role);
 
   useEffect(() => {
     // Définir automatiquement l'élément actif selon l'URL
@@ -275,6 +275,33 @@ export default function SidebarCenter({ children, role }: LayoutProps) {
                   </g>
                 </g>
               </g>
+            </svg>
+          ),
+        },
+        {
+          id: "profil",
+          label: "Profil",
+          icon: (
+            <svg
+              width="24"
+              height="24"
+              className="text-gray-300"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                fill="currentColor"
+              />
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M4 22V20C4 16.6863 6.68629 14 10 14H14C17.3137 14 20 16.6863 20 20V22H4Z"
+                fill="currentColor"
+              />
             </svg>
           ),
         },
@@ -563,6 +590,31 @@ export default function SidebarCenter({ children, role }: LayoutProps) {
         ],
       });
     }
+  }
+
+  if (DomaineName === "compta_admin") {
+    // Menu simplifié pour la comptabilité - remplacer toutes les sections
+    menuSections.length = 0;
+    menuSections.push({
+      title: "Accueil",
+      items: [
+        {
+          id: "bienvenue",
+          label: "Bienvenue",
+          icon: (
+            <svg
+              width="24"
+              height="24"
+              className="text-gray-300"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
+            </svg>
+          ),
+        },
+      ],
+    });
   }
 
   return (

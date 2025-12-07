@@ -25,11 +25,15 @@ export const Http = async <T = any>(
         }
 
         // 🧱 Gestion propre des headers
-        const baseHeaders: Record<string, string> = {
-            "Content-Type": "application/json",
-        };
+        const isFormData = options.body instanceof FormData;
+        const baseHeaders: Record<string, string> = {};
+        
+        // Ne pas définir Content-Type pour FormData (le navigateur le fait automatiquement)
+        if (!isFormData) {
+            baseHeaders["Content-Type"] = "application/json";
+        }
 
-        // On merge les headers fournis par l'utilisateur (si c’est un objet simple)
+        // On merge les headers fournis par l'utilisateur (si c'est un objet simple)
         const extraHeaders =
             options.headers && !(options.headers instanceof Headers)
                 ? (options.headers as Record<string, string>)
@@ -50,7 +54,7 @@ export const Http = async <T = any>(
         const res = await fetch(url, {
             ...options,
             headers,
-            body: options.body ? JSON.stringify(options.body) : undefined,
+            body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined,
         });
 
         const contentType = res.headers.get("content-type");
