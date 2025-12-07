@@ -192,17 +192,20 @@ export default function DrawerContratPaie({
     onClose();
   };
 
-  const handleFileUpload = async (file: File): Promise<string> => {
-    // TODO: Implémenter l'upload du fichier vers le serveur
-    // Pour l'instant, on simule un upload et on retourne une URL
-    // Dans une vraie application, vous devriez appeler une API d'upload
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulation : dans la vraie app, vous obtiendriez l'URL depuis le serveur
-        const url = URL.createObjectURL(file);
-        resolve(url);
-      }, 500);
-    });
+  // Fonction pour formater la date au format ISO 8601 (YYYY-MM-DD)
+  const formatDateToISO = (dateString: string): string => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      // Format YYYY-MM-DD pour le backend
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    } catch {
+      return "";
+    }
   };
 
   const handleSubmit = async () => {
@@ -216,26 +219,31 @@ export default function DrawerContratPaie({
           return;
         }
 
-        // Upload du fichier si un nouveau fichier est sélectionné
-        let urlContrat = contratData.url_contrat;
-        if (selectedContratFile) {
-          try {
-            urlContrat = await handleFileUpload(selectedContratFile);
-            toast.success("Fichier uploadé avec succès !");
-          } catch (err: any) {
-            toast.error("Erreur lors de l'upload du fichier.");
-            return;
-          }
+        // Validation et formatage de la date de début
+        if (!contratData.date_debut) {
+          setError("La date de début est requise.");
+          return;
+        }
+        const dateDebutFormatted = formatDateToISO(contratData.date_debut);
+        if (!dateDebutFormatted) {
+          setError("La date de début n'est pas valide.");
+          return;
         }
 
         if (isEditMode && contratToEdit?.id_contrat) {
+          // Pour la mise à jour, on n'envoie pas de fichier (le backend ne le gère peut-être pas)
           const payload: UpdateContratDto = {
             type_contrat: contratData.type_contrat,
-            date_debut: new Date(contratData.date_debut).toISOString(),
-            date_fin: contratData.date_fin ? new Date(contratData.date_fin).toISOString() : undefined,
-            salaire_reference: contratData.salaire_reference,
-            url_contrat: urlContrat?.trim() || undefined,
-            statut: contratData.statut?.trim() || undefined,
+            date_debut: dateDebutFormatted,
+            ...(contratData.date_fin && {
+              date_fin: formatDateToISO(contratData.date_fin),
+            }),
+            ...(contratData.salaire_reference !== undefined && {
+              salaire_reference: contratData.salaire_reference,
+            }),
+            ...(contratData.statut?.trim() && {
+              statut: contratData.statut.trim(),
+            }),
           };
           const updated = await updateContrat(contratToEdit.id_contrat, payload);
           toast.success("Contrat modifié avec succès !");
@@ -243,16 +251,34 @@ export default function DrawerContratPaie({
             onCreated(updated);
           }
         } else {
+          // Pour la création, le fichier PDF est requis
+          if (!selectedContratFile) {
+            setError("Le fichier PDF du contrat est requis.");
+            return;
+          }
+
+          // Vérifier que le fichier est un PDF
+          if (selectedContratFile.type !== "application/pdf") {
+            setError("Seuls les fichiers PDF sont autorisés.");
+            return;
+          }
+
           const payload: CreateContratDto = {
             type_contrat: contratData.type_contrat,
-            date_debut: new Date(contratData.date_debut).toISOString(),
-            date_fin: contratData.date_fin ? new Date(contratData.date_fin).toISOString() : undefined,
-            salaire_reference: contratData.salaire_reference,
-            url_contrat: urlContrat?.trim() || undefined,
-            statut: contratData.statut?.trim() || undefined,
+            date_debut: dateDebutFormatted,
+            ...(contratData.date_fin && {
+              date_fin: formatDateToISO(contratData.date_fin),
+            }),
+            ...(contratData.salaire_reference !== undefined && {
+              salaire_reference: contratData.salaire_reference,
+            }),
+            ...(contratData.statut?.trim() && {
+              statut: contratData.statut.trim(),
+            }),
             id_personnel: idPersonnel,
           };
-          const created = await createContrat(payload);
+          
+          const created = await createContrat(payload, selectedContratFile);
           toast.success("Contrat enregistré avec succès !");
           if (onCreated && created) {
             onCreated(created);
@@ -264,27 +290,18 @@ export default function DrawerContratPaie({
           return;
         }
 
-        // Upload du fichier si un nouveau fichier est sélectionné
-        let urlBulletin = paieData.url_bulletin;
-        if (selectedPaieFile) {
-          try {
-            urlBulletin = await handleFileUpload(selectedPaieFile);
-            toast.success("Fichier uploadé avec succès !");
-          } catch (err: any) {
-            toast.error("Erreur lors de l'upload du fichier.");
-            return;
-          }
-        }
-
         if (isEditMode && paieToEdit?.id_paie) {
           const payload: UpdatePaieDto = {
             mois: paieData.mois,
             annee: paieData.annee,
             salaire_net: paieData.salaire_net,
             salaire_brut: paieData.salaire_brut,
-            primes: paieData.primes,
-            deductions: paieData.deductions,
-            url_bulletin: urlBulletin?.trim() || undefined,
+            ...(paieData.primes !== undefined && {
+              primes: paieData.primes,
+            }),
+            ...(paieData.deductions !== undefined && {
+              deductions: paieData.deductions,
+            }),
           };
           const updated = await updatePaie(paieToEdit.id_paie, payload);
           toast.success("Paie modifiée avec succès !");
@@ -292,17 +309,32 @@ export default function DrawerContratPaie({
             onCreated(updated);
           }
         } else {
+          // Pour la création, le fichier PDF est requis
+          if (!selectedPaieFile) {
+            setError("Le fichier PDF du bulletin de paie est requis.");
+            return;
+          }
+
+          // Vérifier que le fichier est un PDF
+          if (selectedPaieFile.type !== "application/pdf") {
+            setError("Seuls les fichiers PDF sont autorisés.");
+            return;
+          }
+
           const payload: CreatePaieDto = {
             mois: paieData.mois,
             annee: paieData.annee,
             salaire_net: paieData.salaire_net!,
             salaire_brut: paieData.salaire_brut!,
-            primes: paieData.primes,
-            deductions: paieData.deductions,
-            url_bulletin: urlBulletin?.trim() || undefined,
+            ...(paieData.primes !== undefined && {
+              primes: paieData.primes,
+            }),
+            ...(paieData.deductions !== undefined && {
+              deductions: paieData.deductions,
+            }),
             id_personnel: idPersonnel,
           };
-          const created = await createPaie(payload);
+          const created = await createPaie(payload, selectedPaieFile);
           toast.success("Paie enregistrée avec succès !");
           if (onCreated && created) {
             onCreated(created);
@@ -449,8 +481,8 @@ export default function DrawerContratPaie({
                           setSelectedContratFile(null);
                           handleContratChange("url_contrat", "");
                         }}
-                        accept=".pdf,.doc,.docx"
-                        label="Sélectionner un document"
+                        accept=".pdf,application/pdf"
+                        label="Sélectionner un document PDF"
                       />
                     }
                   />
@@ -556,6 +588,7 @@ export default function DrawerContratPaie({
                   />
                   <FormRow
                     label="Bulletin de paie"
+                    required
                     input={
                       <FileUpload
                         selectedFile={selectedPaieFile}
@@ -565,8 +598,8 @@ export default function DrawerContratPaie({
                           setSelectedPaieFile(null);
                           handlePaieChange("url_bulletin", "");
                         }}
-                        accept=".pdf,.doc,.docx"
-                        label="Sélectionner un bulletin"
+                        accept=".pdf,application/pdf"
+                        label="Sélectionner un bulletin PDF"
                       />
                     }
                   />
@@ -623,6 +656,11 @@ function FileUpload({
       // Vérifier la taille du fichier (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error("Le fichier est trop volumineux. Taille maximale : 10MB");
+        return;
+      }
+      // Vérifier que le fichier est un PDF si accept contient "application/pdf"
+      if (accept.includes("application/pdf") && file.type !== "application/pdf") {
+        toast.error("Seuls les fichiers PDF sont autorisés.");
         return;
       }
       onFileSelect(file);

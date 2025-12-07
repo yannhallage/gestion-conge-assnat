@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Tooltip } from 'react-tooltip'
 import { ClipLoader } from "react-spinners"
 import { ConfirmModal } from "../../../../components/modal-component";
 import Drawer, { type RhDemandeDrawerData } from "../../../../components/rh/drawer";
+import { useRhService } from "../../../../hooks/rh/useRhService";
 
 
 const DemandesFeatureRh = () => {
@@ -79,45 +80,35 @@ export default DemandesFeatureRh;
 
 
 
-const MOCK_DEMANDES: RhDemandeDrawerData[] = [
-    {
-        id_demande: "DEM-2025-0001",
-        statut_demande: "APPROUVEE",
-        type_demande: "Congé annuel",
-        date_demande: "2025-10-01T08:30:00Z",
-        motif: "Vacances familiales programmées de longue date.",
-        nb_jour: 4,
-        personnel: {
-            nom_personnel: "Orathsa",
-            prenom_personnel: "Admin",
-            email_travail: "admin.orathsa@assnat.bj",
-            telephone_travail: "+229 01 02 03 04",
-            service: {
-                nom_service: "Ressources humaines",
-            },
-        },
-        periodeConge: {
-            date_debut: "2025-10-13",
-            date_fin: "2025-10-16",
-            nb_jour: 4,
-            typeConge: {
-                libelle_typeconge: "Congé annuel",
-            },
-        },
-        chef_service: {
-            nom_personnel: "Doe",
-            prenom_personnel: "Jane",
-        },
-    },
-];
-
 export function MesDemandes() {
+    const { getDemandes } = useRhService();
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isOpenDeleteAnuler, setIsOpenAnuler] = useState(false);
     const [isOpen, setIsOpen] = useState(false)
     const [isOpenRevoquer, setIsOpenRevoquer] = useState(false);
     const [selectedDemande, setSelectedDemande] = useState<RhDemandeDrawerData | null>(null);
     const [refreshLoading, setRefreshLoading] = useState(false);
+    const [demandes, setDemandes] = useState<RhDemandeDrawerData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const fetchDemandes = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getDemandes();
+            setDemandes(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            setError(err?.message || "Erreur lors du chargement des demandes.");
+        } finally {
+            setLoading(false);
+        }
+    }, [getDemandes]);
+
+    useEffect(() => {
+        fetchDemandes();
+    }, [fetchDemandes, refreshTrigger]);
 
     const handleOpenDrawer = (demande: RhDemandeDrawerData) => {
         setSelectedDemande(demande);
@@ -126,11 +117,43 @@ export function MesDemandes() {
 
     const handleRefresh = async () => {
         setRefreshLoading(true);
-        // TODO: Implémenter le fetch des demandes quand l'API sera disponible
-        // Pour l'instant, simulation d'un délai
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setRefreshLoading(false);
+        try {
+            setRefreshTrigger(prev => prev + 1);
+        } finally {
+            setRefreshLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <ClipLoader
+                    color="#27a082"
+                    loading={loading}
+                    size={29}
+                    speedMultiplier={3}
+                    aria-label="Chargement..."
+                    data-testid="loader"
+                />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-600">{error}</p>
+                    <button
+                        onClick={handleRefresh}
+                        className="mt-3 text-sm text-red-600 hover:text-red-700 underline"
+                    >
+                        Réessayer
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 font-sans text-gray-800 h-screen overflow-y-auto ">
@@ -209,7 +232,14 @@ export function MesDemandes() {
                     </thead>
 
                     <tbody>
-                        {MOCK_DEMANDES.map((demande) => {
+                        {demandes.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-8 text-center text-gray-500">
+                                    Aucune demande approuvée trouvée
+                                </td>
+                            </tr>
+                        ) : (
+                            demandes.map((demande) => {
                             const start = demande.periodeConge?.date_debut
                                 ? new Date(demande.periodeConge.date_debut)
                                 : null;
@@ -366,7 +396,8 @@ export function MesDemandes() {
                                     </td>
                                 </tr>
                             );
-                        })}
+                        })
+                        )}
                     </tbody>
                 </table>
 

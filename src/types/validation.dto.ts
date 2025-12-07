@@ -302,8 +302,8 @@ export type TypeDocumentEnum = 'CNI' | 'CONTRAT' | 'DIPLOME' | 'ATTestation';
 
 export interface CreatePersonnelDocumentDto {
     type_document: TypeDocumentEnum;
-    url_document: string;
     id_personnel: string;
+    url_document?: string; // Optionnel car le fichier est envoyé séparément
 }
 
 export interface UpdatePersonnelDocumentDto {

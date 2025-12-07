@@ -136,6 +136,12 @@ class RhServiceFront {
         });
     }
 
+    async getHistoriqueDemandes() {
+        return Http(ENDPOINTS_RH.getHistoriqueDemandes, {
+            method: 'GET',
+        });
+    }
+
     // -----------------------------
     // Interactions RH
     // -----------------------------
@@ -161,11 +167,35 @@ class RhServiceFront {
     // -----------------------------
     // Contrats
     // -----------------------------
-    async createContrat(payload: CreateContratDto) {
-        return Http(ENDPOINTS_RH.createContrat, {
-            method: 'POST',
-            body: payload,
-        });
+    async createContrat(payload: CreateContratDto, file?: File) {
+        if (file) {
+            // Créer FormData pour l'upload de fichier
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type_contrat', payload.type_contrat);
+            formData.append('date_debut', payload.date_debut);
+            if (payload.date_fin) {
+                formData.append('date_fin', payload.date_fin);
+            }
+            if (payload.salaire_reference !== undefined) {
+                formData.append('salaire_reference', payload.salaire_reference.toString());
+            }
+            if (payload.statut) {
+                formData.append('statut', payload.statut);
+            }
+            formData.append('id_personnel', payload.id_personnel);
+
+            return Http(ENDPOINTS_RH.createContrat, {
+                method: 'POST',
+                body: formData,
+            });
+        } else {
+            // Fallback sans fichier (pour compatibilité)
+            return Http(ENDPOINTS_RH.createContrat, {
+                method: 'POST',
+                body: payload,
+            });
+        }
     }
 
     async getAllContrats() {
@@ -202,11 +232,34 @@ class RhServiceFront {
     // -----------------------------
     // Paies
     // -----------------------------
-    async createPaie(payload: CreatePaieDto) {
-        return Http(ENDPOINTS_RH.createPaie, {
-            method: 'POST',
-            body: payload,
-        });
+    async createPaie(payload: CreatePaieDto, file?: File) {
+        if (file) {
+            // Créer FormData pour l'upload de fichier
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('mois', payload.mois.toString());
+            formData.append('annee', payload.annee.toString());
+            formData.append('salaire_net', payload.salaire_net.toString());
+            formData.append('salaire_brut', payload.salaire_brut.toString());
+            if (payload.primes !== undefined) {
+                formData.append('primes', payload.primes.toString());
+            }
+            if (payload.deductions !== undefined) {
+                formData.append('deductions', payload.deductions.toString());
+            }
+            formData.append('id_personnel', payload.id_personnel);
+
+            return Http(ENDPOINTS_RH.createPaie, {
+                method: 'POST',
+                body: formData,
+            });
+        } else {
+            // Fallback sans fichier (pour compatibilité)
+            return Http(ENDPOINTS_RH.createPaie, {
+                method: 'POST',
+                body: payload,
+            });
+        }
     }
 
     async getAllPaies() {
@@ -249,11 +302,25 @@ class RhServiceFront {
     // -----------------------------
     // Documents du Personnel
     // -----------------------------
-    async createPersonnelDocument(payload: CreatePersonnelDocumentDto) {
-        return Http(ENDPOINTS_RH.createPersonnelDocument, {
-            method: 'POST',
-            body: payload,
-        });
+    async createPersonnelDocument(payload: CreatePersonnelDocumentDto, file?: File) {
+        if (file) {
+            // Créer FormData pour l'upload de fichier
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type_document', payload.type_document);
+            formData.append('id_personnel', payload.id_personnel);
+
+            return Http(ENDPOINTS_RH.createPersonnelDocument, {
+                method: 'POST',
+                body: formData,
+            });
+        } else {
+            // Fallback sans fichier (pour compatibilité)
+            return Http(ENDPOINTS_RH.createPersonnelDocument, {
+                method: 'POST',
+                body: payload,
+            });
+        }
     }
 
     async getAllPersonnelDocuments() {

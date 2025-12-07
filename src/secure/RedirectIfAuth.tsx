@@ -12,6 +12,8 @@ const RedirectIfAuth: React.FC<{ children: React.ReactNode }> = ({ children }) =
         return <Navigate to="/assnat-rh/dashboard/presence" replace />;
       case "admin":
         return <Navigate to="/assnat-admin/dashboard/presence" replace />;
+      case "compta_admin":
+        return <Navigate to="/assnat-compta_admin/dashboard" replace />;
       case "chef":
         return <Navigate to="/assnat-chef/dashboard/presence" replace />;
       default:

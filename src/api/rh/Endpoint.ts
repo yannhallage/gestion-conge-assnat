@@ -24,6 +24,7 @@ export const ENDPOINTS_RH = {
 
     // Demandes de congé
     getDemandes: '/rh/demandes',                    // GET
+    getHistoriqueDemandes: '/rh/demandes/historique', // GET
 
     // Interactions RH
     createInteractionRh: '/rh/interactions-rh',    // POST

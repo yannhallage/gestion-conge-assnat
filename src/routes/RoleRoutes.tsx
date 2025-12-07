@@ -39,9 +39,13 @@ import DirectionFeatures from "../pages/assnat/rh/features-rh/Direction.feature"
 import ServicesFeatures from "../pages/assnat/rh/features-rh/Service.feature";
 import InteractionRhFeatures from "../pages/assnat/rh/features-rh/Interaction.feature";
 import TypeCongeFeature from "../pages/assnat/rh/features-rh/TypeConge.feature";
+
+// --- COMPTABILITÉ ---
+import BienvenueComptabilite from "../pages/assnat/comptabilite/features-comptabilite/Bienvenue.feature";
+import ComptabiliteFeature from "../pages/assnat/comptabilite/features-comptabilite/Comptabilite.feature";
 // import React from "react";
 
-export default function RoleRoutes(role: "user" | "admin" | "rh") {
+export default function RoleRoutes(role: "user" | "admin" | "rh" | "compta_admin") {
     const base = `assnat-${role}/dashboard`;
 
     const wrap = (element: ReactNode) => (
@@ -96,6 +100,13 @@ export default function RoleRoutes(role: "user" | "admin" | "rh") {
             <Route key="rh-interaction" path={`${base}/interaction`} element={wrap(<InteractionRhFeatures />)} />,
             <Route key="rh-typeconge" path={`${base}/typeconge`} element={wrap(<TypeCongeFeature />)} />,
             <Route key="rh-profil" path={`${base}/profil`} element={wrap(<ProfilFeature />)} />,
+        ];
+    }
+    if (role === "compta_admin") {
+        return [
+            <Route key="compta_admin-base" path={`${base}`} element={wrap(<></>)} />,
+            <Route key="compta_admin-bienvenue" path={`${base}/bienvenue`} element={wrap(<BienvenueComptabilite />)} />,
+            <Route key="compta_admin-comptabilite" path={`${base}/comptabilite`} element={wrap(<ComptabiliteFeature />)} />,
         ];
     }
 

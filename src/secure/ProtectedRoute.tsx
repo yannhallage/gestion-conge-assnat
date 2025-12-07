@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export interface ProtectedRouteProps {
     children: ReactNode;
-    role?: "user" | "admin" | "rh" | "chef";
+    role?: "user" | "admin" | "rh" | "compta_admin";
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, role }) => {
@@ -24,6 +24,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, role }) => {
         const redirectPath =
             user.role === 'rh'
                 ? `/assnat-rh/dashboard/`
+                : user.role === 'compta_admin'
+                ? `/assnat-compta_admin/dashboard`
                 : `/assnat-${user.role}/dashboard/presence`;
 
         return <Navigate to={redirectPath} replace />;

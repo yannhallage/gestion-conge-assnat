@@ -1,15 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
+import { useRhService } from "../../../../hooks/rh/useRhService";
 
 const HistoriquesFeatureAdmin = () => {
-
+    const { getHistoriqueDemandes } = useRhService();
+    const [historiques, setHistoriques] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const fetchHistoriques = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getHistoriqueDemandes();
+            setHistoriques(Array.isArray(data) ? data : []);
+        } catch (err: any) {
+            setError(err?.message || "Erreur lors du chargement de l'historique.");
+        } finally {
+            setLoading(false);
+        }
+    }, [getHistoriqueDemandes]);
 
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 700);
-        return () => clearTimeout(timer);
-    }, []);
+        fetchHistoriques();
+    }, [fetchHistoriques, refreshTrigger]);
 
     if (loading) {
         return (
@@ -30,10 +46,18 @@ const HistoriquesFeatureAdmin = () => {
         <div className="h-full flex flex-col bg-white">
             <header className="border-b border-gray-200 px-5 py-3 flex items-center justify-between">
                 <h1 className="text-xl text-gray-800">Historiques</h1>
-                <RefreshButton />
+                <RefreshButton onRefresh={() => setRefreshTrigger(prev => prev + 1)} />
             </header>
-            <div className="">
-                <AucuneHistorique />
+            <div className="flex-1 overflow-y-auto">
+                {error ? (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-sm text-red-500">{error}</p>
+                    </div>
+                ) : historiques.length > 0 ? (
+                    <HistoriqueTable demandes={historiques} />
+                ) : (
+                    <AucuneHistorique />
+                )}
             </div>
         </div>
     );
@@ -42,15 +66,17 @@ const HistoriquesFeatureAdmin = () => {
 export default HistoriquesFeatureAdmin;
 
 
-const RefreshButton = () => {
+const RefreshButton = ({ onRefresh }: { onRefresh: () => void }) => {
     const [refreshLoading, setRefreshLoading] = useState(false);
 
     const handleRefresh = async () => {
         setRefreshLoading(true);
-        // TODO: Implémenter le fetch des historiques quand l'API sera disponible
-        // Pour l'instant, simulation d'un délai
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setRefreshLoading(false);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            onRefresh();
+        } finally {
+            setRefreshLoading(false);
+        }
     };
 
     return (
@@ -111,3 +137,98 @@ const AucuneHistorique = () => {
         </motion.div>
     );
 };
+
+function HistoriqueTable({ demandes }: { demandes: any[] }) {
+    const formatDate = (dateString?: string): string => {
+        if (!dateString) return "—";
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            return date.toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    const formatRange = (dateDebut?: string, dateFin?: string): string => {
+        if (!dateDebut) return "—";
+        const debut = formatDate(dateDebut);
+        const fin = dateFin ? formatDate(dateFin) : "—";
+        return `${debut} - ${fin}`;
+    };
+
+    const getStatusStyle = (statut?: string) => {
+        const statusKey = (statut ?? "").toUpperCase();
+        const styles: Record<string, { bg: string; text: string }> = {
+            "APPROUVEE": { bg: "bg-green-100", text: "text-green-700" },
+            "REFUSEE": { bg: "bg-red-100", text: "text-red-700" },
+            "TERMINEE": { bg: "bg-blue-100", text: "text-blue-700" },
+            "EN_ATTENTE": { bg: "bg-yellow-100", text: "text-yellow-700" },
+        };
+        return styles[statusKey] || { bg: "bg-gray-100", text: "text-gray-700" };
+    };
+
+    return (
+        <div className="p-6">
+            <div className="overflow-hidden border border-gray-100 bg-white shadow-sm rounded-lg">
+                <table className="w-full text-sm text-gray-700">
+                    <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                        <tr>
+                            <th className="px-5 py-3 text-left">Type</th>
+                            <th className="px-5 py-3 text-left">Employé</th>
+                            <th className="px-5 py-3 text-left">Période</th>
+                            <th className="px-5 py-3 text-left">Durée</th>
+                            <th className="px-5 py-3 text-left">Service</th>
+                            <th className="px-5 py-3 text-left">Créée le</th>
+                            <th className="px-5 py-3 text-left">Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {demandes.map((demande) => {
+                            const statusStyle = getStatusStyle(demande.statut_demande);
+                            const typeLabel =
+                                demande.periodeConge?.typeConge?.libelle_typeconge ||
+                                demande.type_demande ||
+                                "Demande";
+                            const periodLabel = formatRange(
+                                demande.periodeConge?.date_debut,
+                                demande.periodeConge?.date_fin
+                            );
+                            const nbJour = demande.periodeConge?.nb_jour ?? demande.nb_jour;
+                            const nbJourLabel = nbJour ? `${nbJour} j` : "—";
+                            const employeNom = demande.personnel
+                                ? `${demande.personnel.prenom_personnel || ""} ${demande.personnel.nom_personnel || ""}`.trim()
+                                : "—";
+                            const serviceNom = demande.personnel?.service?.nom_service || "—";
+
+                            return (
+                                <tr
+                                    key={demande.id_demande}
+                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="px-5 py-3">{typeLabel}</td>
+                                    <td className="px-5 py-3">{employeNom}</td>
+                                    <td className="px-5 py-3">{periodLabel}</td>
+                                    <td className="px-5 py-3">{nbJourLabel}</td>
+                                    <td className="px-5 py-3">{serviceNom}</td>
+                                    <td className="px-5 py-3">{formatDate(demande.date_creation)}</td>
+                                    <td className="px-5 py-3">
+                                        <span
+                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}
+                                        >
+                                            {demande.statut_demande || "—"}
+                                        </span>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}

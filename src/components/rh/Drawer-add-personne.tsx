@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import type { ReactNode } from "react";
 import { ClipLoader } from "react-spinners";
 import { toast } from "sonner";
@@ -428,12 +428,32 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                 <FormRow
                   label="Pays"
                   input={
-                    <input
-                      type="text"
+                    <CustomSelect
                       value={formData.pays_personnel ?? ""}
-                      onChange={(e) => handleChange("pays_personnel", e.target.value)}
-                      placeholder="Pays"
-                      className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
+                      onChange={(value) => handleChange("pays_personnel", value)}
+                      placeholder="Sélectionner un pays"
+                      options={[
+                        { value: "Côte d'Ivoire", label: "Côte d'Ivoire" },
+                        { value: "France", label: "France" },
+                        { value: "Sénégal", label: "Sénégal" },
+                        { value: "Mali", label: "Mali" },
+                        { value: "Burkina Faso", label: "Burkina Faso" },
+                        { value: "Niger", label: "Niger" },
+                        { value: "Guinée", label: "Guinée" },
+                        { value: "Ghana", label: "Ghana" },
+                        { value: "Nigeria", label: "Nigeria" },
+                        { value: "Cameroun", label: "Cameroun" },
+                        { value: "Gabon", label: "Gabon" },
+                        { value: "Congo", label: "Congo" },
+                        { value: "Togo", label: "Togo" },
+                        { value: "Bénin", label: "Bénin" },
+                        { value: "Maroc", label: "Maroc" },
+                        { value: "Algérie", label: "Algérie" },
+                        { value: "Tunisie", label: "Tunisie" },
+                        { value: "Belgique", label: "Belgique" },
+                        { value: "Suisse", label: "Suisse" },
+                        { value: "Canada", label: "Canada" },
+                      ]}
                     />
                   }
                 />
@@ -753,6 +773,94 @@ function initialFormStateFromPersonnel(personnel: PersonnelForEdit, services: Se
     banque_rib: personnel.banque_rib ?? "",
     statut_professionnel: (personnel.statut_professionnel as StatutPersonnel) ?? "ACTIF",
   };
+}
+
+interface CustomSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  className?: string;
+}
+
+function CustomSelect({ value, onChange, options, placeholder = "Sélectionner", className = "" }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  return (
+    <div ref={selectRef} className={`relative flex-1 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-4 py-3 text-left bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 flex items-center justify-between ${
+          isOpen ? "ring-2 ring-teal-500 border-teal-500" : "hover:border-gray-400"
+        }`}
+      >
+        <span className={selectedOption ? "text-gray-700" : "text-gray-400"}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg
+          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full px-4 py-2.5 text-left hover:bg-teal-50 transition-colors duration-150 flex items-center ${
+                value === option.value ? "bg-teal-50 text-teal-700 font-medium" : "text-gray-700"
+              }`}
+            >
+              {value === option.value && (
+                <svg
+                  className="w-4 h-4 mr-2 text-teal-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+              <span className={value === option.value ? "" : "ml-6"}>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function FormRow({ label, required, input }: { label: string; required?: boolean; input: ReactNode }) {

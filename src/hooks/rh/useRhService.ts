@@ -220,6 +220,19 @@ export function useRhService() {
         }
     }, []);
 
+    const getHistoriqueDemandes = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            return await rhServiceFront.getHistoriqueDemandes();
+        } catch (err: any) {
+            setError(err.message || "Erreur lors de la récupération de l'historique des demandes");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     // -----------------------------
     // Interactions RH
     // -----------------------------
@@ -265,11 +278,11 @@ export function useRhService() {
     // -----------------------------
     // Contrats
     // -----------------------------
-    const createContrat = useCallback(async (payload: CreateContratDto) => {
+    const createContrat = useCallback(async (payload: CreateContratDto, file?: File) => {
         try {
             setLoading(true);
             setError(null);
-            return await rhServiceFront.createContrat(payload);
+            return await rhServiceFront.createContrat(payload, file);
         } catch (err: any) {
             setError(err.message || "Erreur lors de la création du contrat");
             throw err;
@@ -346,11 +359,11 @@ export function useRhService() {
     // -----------------------------
     // Paies
     // -----------------------------
-    const createPaie = useCallback(async (payload: CreatePaieDto) => {
+    const createPaie = useCallback(async (payload: CreatePaieDto, file?: File) => {
         try {
             setLoading(true);
             setError(null);
-            return await rhServiceFront.createPaie(payload);
+            return await rhServiceFront.createPaie(payload, file);
         } catch (err: any) {
             setError(err.message || "Erreur lors de la création de la paie");
             throw err;
@@ -440,11 +453,11 @@ export function useRhService() {
     // -----------------------------
     // Documents du Personnel
     // -----------------------------
-    const createPersonnelDocument = useCallback(async (payload: CreatePersonnelDocumentDto) => {
+    const createPersonnelDocument = useCallback(async (payload: CreatePersonnelDocumentDto, file?: File) => {
         try {
             setLoading(true);
             setError(null);
-            return await rhServiceFront.createPersonnelDocument(payload);
+            return await rhServiceFront.createPersonnelDocument(payload, file);
         } catch (err: any) {
             setError(err.message || "Erreur lors de la création du document");
             throw err;
@@ -548,6 +561,7 @@ export function useRhService() {
         createTypeConge,
         getStatistics,
         getDemandes,
+        getHistoriqueDemandes,
         createInteractionRh,
         getAllInteractionsRh,
         deleteInteractionRh,

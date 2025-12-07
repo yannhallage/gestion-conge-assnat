@@ -87,16 +87,6 @@ export default function DrawerDocumentPersonnel({
     onClose();
   };
 
-  const handleFileUpload = async (file: File): Promise<string> => {
-    // TODO: Implémenter l'upload du fichier vers le serveur
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const url = URL.createObjectURL(file);
-        resolve(url);
-      }, 500);
-    });
-  };
-
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
@@ -107,27 +97,13 @@ export default function DrawerDocumentPersonnel({
         return;
       }
 
-      // Upload du fichier si un nouveau fichier est sélectionné
-      let urlDocument = documentData.url_document;
-      if (selectedFile) {
-        try {
-          urlDocument = await handleFileUpload(selectedFile);
-          toast.success("Fichier uploadé avec succès !");
-        } catch (err: any) {
-          toast.error("Erreur lors de l'upload du fichier.");
-          return;
-        }
-      }
-
-      if (!urlDocument) {
-        setError("Merci de sélectionner un document.");
-        return;
-      }
-
       if (isEditMode && documentToEdit?.id_document) {
+        // Pour la mise à jour, on n'envoie pas de fichier (le backend ne le gère peut-être pas)
         const payload: UpdatePersonnelDocumentDto = {
           type_document: documentData.type_document,
-          url_document: urlDocument,
+          ...(documentData.url_document && {
+            url_document: documentData.url_document,
+          }),
         };
         const updated = await updatePersonnelDocument(documentToEdit.id_document, payload);
         toast.success("Document modifié avec succès !");
@@ -135,12 +111,24 @@ export default function DrawerDocumentPersonnel({
           onCreated(updated);
         }
       } else {
+        // Pour la création, le fichier est requis
+        if (!selectedFile) {
+          setError("Le fichier du document est requis.");
+          return;
+        }
+
+        // Vérifier le type de fichier (PDF, JPEG, JPG, PNG)
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(selectedFile.type)) {
+          setError("Seuls les fichiers PDF, JPEG, JPG et PNG sont autorisés.");
+          return;
+        }
+
         const payload: CreatePersonnelDocumentDto = {
           type_document: documentData.type_document,
-          url_document: urlDocument,
           id_personnel: idPersonnel,
         };
-        const created = await createPersonnelDocument(payload);
+        const created = await createPersonnelDocument(payload, selectedFile);
         toast.success("Document enregistré avec succès !");
         if (onCreated && created) {
           onCreated(created);
@@ -248,8 +236,8 @@ export default function DrawerDocumentPersonnel({
                         setSelectedFile(null);
                         handleChange("url_document", "");
                       }}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                      label="Sélectionner un document"
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/jpg,image/png"
+                      label="Sélectionner un document (PDF, JPEG, PNG)"
                     />
                   }
                 />
@@ -302,8 +290,15 @@ function FileUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Vérifier la taille du fichier (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
         toast.error("Le fichier est trop volumineux. Taille maximale : 10MB");
+        return;
+      }
+      // Vérifier le type de fichier (PDF, JPEG, JPG, PNG)
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Seuls les fichiers PDF, JPEG, JPG et PNG sont autorisés.");
         return;
       }
       onFileSelect(file);

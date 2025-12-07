@@ -57,10 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email_personnel: email,
                 password: password,
             });
-            const roleMap: Record<string, "user" | "admin" | "rh" | "chef"> = {
+            const roleMap: Record<string, "user" | "admin" | "rh" | "chef" | "compta_admin"> = {
                 EMPLOYE: "user",
                 CHEF_SERVICE: "admin",
                 RH: "rh",
+                COMPTA_ADMIN: "compta_admin",
                 // CHEF_SERVICE: "chef",
             };
             // console.log("response.user.role", response.user.role);
@@ -87,6 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     break;
                 case "admin":
                     navigate("/assnat-admin/dashboard/presence");
+                    break;
+                case "compta_admin":
+                    navigate("/assnat-compta_admin/dashboard");
                     break;
                 case "chef":
                     navigate("/assnat-chef/dashboard/presence");

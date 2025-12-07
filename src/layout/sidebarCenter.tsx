@@ -4,14 +4,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 interface LayoutProps {
   children?: ReactNode;
-  role: "user" | "admin" | "rh";
+  role: "user" | "admin" | "rh" | "compta_admin";
 }
 
 export default function SidebarCenter({ children, role }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeItem, setActiveItem] = useState<string>("");
-  const [DomaineName, _] = useState<"user" | "admin" | "rh">(role);
+  const [DomaineName, _] = useState<"user" | "admin" | "rh" | "compta_admin">(role);
 
   useEffect(() => {
     // Définir automatiquement l'élément actif selon l'URL
@@ -590,6 +590,31 @@ export default function SidebarCenter({ children, role }: LayoutProps) {
         ],
       });
     }
+  }
+
+  if (DomaineName === "compta_admin") {
+    // Menu simplifié pour la comptabilité - remplacer toutes les sections
+    menuSections.length = 0;
+    menuSections.push({
+      title: "Accueil",
+      items: [
+        {
+          id: "bienvenue",
+          label: "Bienvenue",
+          icon: (
+            <svg
+              width="24"
+              height="24"
+              className="text-gray-300"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
+            </svg>
+          ),
+        },
+      ],
+    });
   }
 
   return (

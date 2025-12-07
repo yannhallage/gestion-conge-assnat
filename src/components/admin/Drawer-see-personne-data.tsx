@@ -7,6 +7,7 @@ import type {
 } from "../../types/validation.dto";
 import { useChefService } from "../../hooks/chefdeservice/useChefService";
 import { useRhService } from "../../hooks/rh/useRhService";
+import { useAuth } from "../../contexts/AuthContext";
 
 type PersonnelDetails = {
   id_personnel?: string;
@@ -29,6 +30,15 @@ type PersonnelDetails = {
   is_active?: boolean;
   id_service?: string;
   nom_service?: string;
+  poste?: string;
+  type_contrat?: string;
+  date_embauche?: string;
+  date_fin_contrat?: string;
+  salaire_base?: number;
+  niveau_hierarchique?: string;
+  numero_cnps?: string;
+  banque_nom?: string;
+  banque_rib?: string;
 };
 
 interface DrawerProps {
@@ -40,6 +50,9 @@ interface DrawerProps {
 }
 
 export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPersonnelUpdated, onInviteSuccess }: DrawerProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  
   const [loadingSkeleton, setLoadingSkeleton] = useState(false);
   const [inviteFeedback, setInviteFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [serviceName, setServiceName] = useState<string | null>(null);
@@ -114,7 +127,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
   useEffect(() => {
     const fetchContrats = async () => {
       const currentPersonnel = localPersonnel || personnel;
-      if (!currentPersonnel?.id_personnel) {
+      if (!currentPersonnel?.id_personnel || isAdmin) {
         setContrats([]);
         return;
       }
@@ -131,17 +144,17 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
       }
     };
 
-    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
       fetchContrats();
     } else {
       setContrats([]);
     }
-  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getContratsByPersonnel]);
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getContratsByPersonnel, isAdmin]);
 
   useEffect(() => {
     const fetchPaies = async () => {
       const currentPersonnel = localPersonnel || personnel;
-      if (!currentPersonnel?.id_personnel) {
+      if (!currentPersonnel?.id_personnel || isAdmin) {
         setPaies([]);
         return;
       }
@@ -158,17 +171,17 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
       }
     };
 
-    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
       fetchPaies();
     } else {
       setPaies([]);
     }
-  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPaiesByPersonnel]);
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPaiesByPersonnel, isAdmin]);
 
   useEffect(() => {
     const fetchDocuments = async () => {
       const currentPersonnel = localPersonnel || personnel;
-      if (!currentPersonnel?.id_personnel) {
+      if (!currentPersonnel?.id_personnel || isAdmin) {
         setDocuments([]);
         return;
       }
@@ -185,12 +198,12 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
       }
     };
 
-    if (isOpen && (localPersonnel || personnel)?.id_personnel) {
+    if (isOpen && (localPersonnel || personnel)?.id_personnel && !isAdmin) {
       fetchDocuments();
     } else {
       setDocuments([]);
     }
-  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPersonnelDocumentsByPersonnel]);
+  }, [localPersonnel?.id_personnel, personnel?.id_personnel, isOpen, getPersonnelDocumentsByPersonnel, isAdmin]);
 
   const buildPayload = useCallback(() => {
     const currentPersonnel = localPersonnel || personnel;
@@ -456,66 +469,101 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
 
                   <section className="space-y-3">
                     <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                      Contrats
+                      Informations professionnelles
                     </h2>
-                    {loadingContrats ? (
-                      <div className="flex items-center justify-center py-4">
-                        <ClipLoader size={20} color="#27a082" />
-                      </div>
-                    ) : contrats.length > 0 ? (
-                      <div className="space-y-2">
-                        {contrats.map((contrat, index) => (
-                          <ContratCard key={contrat.id_contrat || index} contrat={contrat} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
-                        Aucun contrat enregistré
-                      </div>
+                    <InfoRow label="Poste" value={currentPersonnel.poste} />
+                    <InfoRow label="Type de contrat" value={currentPersonnel.type_contrat} />
+                    <InfoRow label="Date d'embauche" value={formatDate(currentPersonnel.date_embauche)} />
+                    <InfoRow label="Date de fin de contrat" value={formatDate(currentPersonnel.date_fin_contrat)} />
+                    {!isAdmin && (
+                      <>
+                        <InfoRow 
+                          label="Salaire de base" 
+                          value={currentPersonnel.salaire_base ? new Intl.NumberFormat("fr-FR", {
+                            style: "currency",
+                            currency: "XOF",
+                            minimumFractionDigits: 0,
+                          }).format(currentPersonnel.salaire_base) : undefined} 
+                        />
+                        <InfoRow label="Niveau hiérarchique" value={currentPersonnel.niveau_hierarchique} />
+                        <InfoRow label="Numéro CNPS" value={currentPersonnel.numero_cnps} />
+                        <InfoRow label="Banque" value={currentPersonnel.banque_nom} />
+                        <InfoRow label="RIB" value={currentPersonnel.banque_rib} />
+                      </>
+                    )}
+                    {isAdmin && (
+                      <>
+                        <InfoRow label="Niveau hiérarchique" value={currentPersonnel.niveau_hierarchique} />
+                      </>
                     )}
                   </section>
 
-                  <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                      Paies
-                    </h2>
-                    {loadingPaies ? (
-                      <div className="flex items-center justify-center py-4">
-                        <ClipLoader size={20} color="#27a082" />
-                      </div>
-                    ) : paies.length > 0 ? (
-                      <div className="space-y-2">
-                        {paies.map((paie, index) => (
-                          <PaieCard key={paie.id_paie || index} paie={paie} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
-                        Aucune paie enregistrée
-                      </div>
-                    )}
-                  </section>
+                  {!isAdmin && (
+                    <>
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Contrats
+                        </h2>
+                        {loadingContrats ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : contrats.length > 0 ? (
+                          <div className="space-y-2">
+                            {contrats.map((contrat, index) => (
+                              <ContratCard key={contrat.id_contrat || index} contrat={contrat} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucun contrat enregistré
+                          </div>
+                        )}
+                      </section>
 
-                  <section className="space-y-3">
-                    <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                      Documents
-                    </h2>
-                    {loadingDocuments ? (
-                      <div className="flex items-center justify-center py-4">
-                        <ClipLoader size={20} color="#27a082" />
-                      </div>
-                    ) : documents.length > 0 ? (
-                      <div className="space-y-2">
-                        {documents.map((document, index) => (
-                          <DocumentCard key={document.id_document || index} document={document} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
-                        Aucun document enregistré
-                      </div>
-                    )}
-                  </section>
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Paies
+                        </h2>
+                        {loadingPaies ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : paies.length > 0 ? (
+                          <div className="space-y-2">
+                            {paies.map((paie, index) => (
+                              <PaieCard key={paie.id_paie || index} paie={paie} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucune paie enregistrée
+                          </div>
+                        )}
+                      </section>
+
+                      <section className="space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                          Documents
+                        </h2>
+                        {loadingDocuments ? (
+                          <div className="flex items-center justify-center py-4">
+                            <ClipLoader size={20} color="#27a082" />
+                          </div>
+                        ) : documents.length > 0 ? (
+                          <div className="space-y-2">
+                            {documents.map((document, index) => (
+                              <DocumentCard key={document.id_document || index} document={document} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-500">
+                            Aucun document enregistré
+                          </div>
+                        )}
+                      </section>
+                    </>
+                  )}
                 </>
               )}
             </div>
