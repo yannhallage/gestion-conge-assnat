@@ -34,6 +34,8 @@ import DemandesFeatureRh from "../pages/assnat/rh/features-rh/Demandes.feature";
 import CalendarFeatureRH from "../pages/assnat/rh/features-rh/Calendar.feature";
 import HistoriquesFeatureRh from "../pages/assnat/rh/features-rh/Historiques.feature";
 import RapportFeatureRh from "../pages/assnat/rh/features-rh/Rapport.feature";
+import ReglementsFeatureRh from "../pages/assnat/rh/features-rh/Reglements.feature";
+import DemandesRapportFeatureRh from "../pages/assnat/rh/features-rh/DemandesRapport.feature";
 import EmployesFeatures from "../pages/assnat/rh/features-rh/Employes.feature";
 import DirectionFeatures from "../pages/assnat/rh/features-rh/Direction.feature";
 import ServicesFeatures from "../pages/assnat/rh/features-rh/Service.feature";
@@ -94,6 +96,8 @@ export default function RoleRoutes(role: "user" | "admin" | "rh" | "compta_admin
             <Route key="rh-calendrier" path={`${base}/calendrier`} element={wrap(<CalendarFeatureRH />)} />,
             <Route key="rh-historique" path={`${base}/historique`} element={wrap(<HistoriquesFeatureRh />)} />,
             <Route key="rh-rapport" path={`${base}/rapport`} element={wrap(<RapportFeatureRh />)} />,
+            <Route key="rh-reglements" path={`${base}/rapport/reglements`} element={wrap(<ReglementsFeatureRh />)} />,
+            <Route key="rh-demandes-rapport" path={`${base}/rapport/demandes`} element={wrap(<DemandesRapportFeatureRh />)} />,
             <Route key="rh-employes" path={`${base}/employes`} element={wrap(<EmployesFeatures />)} />,
             <Route key="rh-direction" path={`${base}/direction`} element={wrap(<DirectionFeatures />)} />,
             <Route key="rh-service" path={`${base}/service`} element={wrap(<ServicesFeatures />)} />,
