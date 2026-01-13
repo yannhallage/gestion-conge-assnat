@@ -1,8 +1,8 @@
 import { ACCESS_TOKEN_KEY } from "../secure/storageKeys";
 
 //const BASE_URL = "https://assnat-api-nest.onrender.com";
-const BASE_URL = "https://assnat-api-nest.vercel.app";
-// const BASE_URL = "http://localhost:3003";
+// const BASE_URL = "https://assnat-api-nest.vercel.app";
+const BASE_URL = "http://localhost:3003";
 
 export interface RequestOptions extends RequestInit {
     body?: any;
@@ -52,11 +52,35 @@ export const Http = async <T = any>(
             headers["Authorization"] = `Bearer ${storedToken}`;
         }
 
-        const res = await fetch(url, {
-            ...options,
-            headers,
-            body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined,
-        });
+        // Extraire uniquement les propriétés valides pour fetch (exclure queryParams et token)
+        const { queryParams, token, body, ...fetchOptions } = options;
+        
+        // Pour FormData, ne pas inclure Content-Type dans les headers (le navigateur le fait automatiquement)
+        const finalHeaders = isFormData 
+            ? Object.fromEntries(
+                Object.entries(headers).filter(([key]) => key.toLowerCase() !== 'content-type')
+            )
+            : headers;
+        
+        const fetchConfig: RequestInit = {
+            ...fetchOptions,
+            method: options.method || 'GET',
+            headers: finalHeaders,
+            body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
+        };
+        
+        // Log pour débogage (en développement uniquement)
+        if (process.env.NODE_ENV === 'development') {
+            console.log('[HTTP] Requête:', {
+                url,
+                method: fetchConfig.method,
+                hasBody: !!body,
+                isFormData,
+                headers: Object.keys(finalHeaders),
+            });
+        }
+        
+        const res = await fetch(url, fetchConfig);
 
         const contentType = res.headers.get("content-type");
 
@@ -64,14 +88,26 @@ export const Http = async <T = any>(
         if (!res.ok) {
             let errorMsg = await res.text();
             try {
-                if (contentType?.includes("application/json")) {
-                    const json = await res.json();
-                    errorMsg = json.message || JSON.stringify(json);
-                }
+                // Si on a déjà lu le texte, on ne peut pas le relire en JSON
+                // On essaie de parser le texte comme JSON
+                const json = JSON.parse(errorMsg);
+                errorMsg = json.message || json.error || JSON.stringify(json);
             } catch {
-                /* ignore parsing error */
+                // Si ce n'est pas du JSON, on garde le texte tel quel
             }
-            throw new Error(errorMsg || `Erreur HTTP ${res.status}`);
+            
+            // Log détaillé de l'erreur en développement
+            if (process.env.NODE_ENV === 'development') {
+                console.error('[HTTP ERROR]', {
+                    url,
+                    method: options.method || 'GET',
+                    status: res.status,
+                    statusText: res.statusText,
+                    error: errorMsg,
+                });
+            }
+            
+            throw new Error(errorMsg || `Erreur HTTP ${res.status}: ${res.statusText}`);
         }
 
         // ✅ Retour JSON ou texte

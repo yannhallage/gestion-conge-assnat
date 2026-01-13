@@ -334,7 +334,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                     }
                   />
                 )}
-                <FormRow
+                {/* <FormRow
                   label="Date de naissance"
                   input={
                     <input
@@ -344,7 +344,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
-                />
+                /> */}
                 <FormRow
                   label="Matricule"
                   input={
@@ -574,7 +574,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                     </select>
                   }
                 />
-                <FormRow
+                {/* <FormRow
                   label="Date d'embauche"
                   input={
                     <input
@@ -632,7 +632,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                       className="flex-1 px-4 py-3 border border-gray-300 bg-white text-gray-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition"
                     />
                   }
-                />
+                /> */}
                 <FormRow
                   label="Statut professionnel"
                   required
@@ -652,7 +652,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                 />
               </section>
 
-              <section className="bg-white space-y-5">
+              {/* <section className="bg-white space-y-5">
                 <h2 className="text-[15px] font-semibold text-gray-800 pb-2">Informations bancaires</h2>
                 <FormRow
                   label="Nom de la banque"
@@ -678,7 +678,7 @@ export default function DrawerAddPersonne({ isOpen, onClose, services, onCreated
                     />
                   }
                 />
-              </section>
+              </section> */}
 
               {error && (
                 <p className="text-sm text-red-500">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import { Tooltip } from "react-tooltip";
@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import Drawer from "../../../../components/drawer";
 import { ConfirmModal } from "../../../../components/modal-component";
 import { useChefService } from "../../../../hooks/chefdeservice/useChefService";
+import { useFicheDemandeService } from "../../../../hooks/fiche-demande/useFicheDemandeService";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { buildDemandePdf, type DemandePdfData } from "../../../../utils/pdf/buildDemandePdf";
 
 type DemandeStatus = "EN_ATTENTE" | "EN_COURS" | "APPROUVEE" | "REFUSEE" | string;
 
@@ -20,6 +22,7 @@ type Demande = {
     motif?: string | null;
     nb_jour?: number | null;
     id_service?: string | null;
+    id_personnel?: string | null;
     periodeConge?: {
         date_debut?: string | null;
         date_fin?: string | null;
@@ -30,6 +33,7 @@ type Demande = {
         } | null;
     } | null;
     personnel?: {
+        id_personnel?: string | null;
         nom_personnel?: string | null;
         prenom_personnel?: string | null;
         email_travail?: string | null;
@@ -65,6 +69,14 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+});
+
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
 });
 
 const ApprobationFeatureAdmin = () => {
@@ -167,6 +179,8 @@ function MesApprobationsEnAttentes({ refreshTrigger }: { refreshTrigger?: number
         rejectDemande,
     } = useChefService();
 
+    const { createFicheDemande } = useFicheDemandeService();
+
     const [demandes, setDemandes] = useState<Demande[]>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
@@ -263,6 +277,56 @@ function MesApprobationsEnAttentes({ refreshTrigger }: { refreshTrigger?: number
         );
     };
 
+    // Fonction helper pour convertir Blob en File
+    const blobToFile = (blob: Blob, fileName: string): File => {
+        return new File([blob], fileName, { type: blob.type || "application/pdf" });
+    };
+
+    // Fonction pour préparer les données PDF à partir d'une demande
+    const preparePdfData = useCallback((demande: Demande): DemandePdfData => {
+        const typeLabel =
+            demande.periodeConge?.typeConge?.libelle_typeconge ??
+            demande.type_demande ??
+            "Demande";
+        
+        const nbJour = demande.periodeConge?.nb_jour ?? demande.nb_jour;
+        const nbJourLabel = nbJour ? `${nbJour} jour${nbJour > 1 ? "s" : ""}` : "—";
+        
+        const startDate = demande.periodeConge?.date_debut ?? demande.date_debut;
+        const endDate = demande.periodeConge?.date_fin ?? demande.date_fin;
+        
+        const contactEmail = demande.personnel?.email_travail ?? null;
+        const contactPhone = demande.personnel?.telephone_travail ?? demande.personnel?.telephone_personnel ?? null;
+
+        return {
+            reference: demande.id_demande,
+            typeDemande: typeLabel,
+            statut: "Approuvée",
+            periode: {
+                debut: startDate ? DATE_FORMATTER.format(new Date(startDate)) : null,
+                fin: endDate ? DATE_FORMATTER.format(new Date(endDate)) : null,
+            },
+            nbJours: nbJourLabel,
+            createdAt: demande.date_demande
+                ? DATE_TIME_FORMATTER.format(new Date(demande.date_demande))
+                : null,
+            demandeur: {
+                nom: demande.personnel?.nom_personnel ?? "—",
+                prenom: demande.personnel?.prenom_personnel ?? "",
+                email: contactEmail,
+                telephone: contactPhone,
+                service: null,
+            },
+            motif: demande.motif ?? null,
+            chef: demande.chef_service
+                ? {
+                      nom: demande.chef_service.nom_personnel ?? null,
+                      prenom: demande.chef_service.prenom_personnel ?? null,
+                  }
+                : null,
+        };
+    }, []);
+
     const handleApproveReject = async () => {
         if (!modalType || !selectedDemande || !chefId) return;
 
@@ -289,7 +353,34 @@ function MesApprobationsEnAttentes({ refreshTrigger }: { refreshTrigger?: number
                     : {};
                 await approveDemande(demandeId, chefPayload, payload);
                 updateLocalDemande(demandeId, { statut_demande: "APPROUVEE" });
-                toast.success("Demande approuvée avec succès.");
+                
+                // Créer et envoyer le PDF après l'approbation
+                try {
+                    const pdfData = preparePdfData(selectedDemande);
+                    const pdfBlob = buildDemandePdf(pdfData);
+                    const pdfFile = blobToFile(pdfBlob, `fiche-demande-${demandeId}.pdf`);
+                    
+                    // Récupérer l'ID du personnel depuis la demande
+                    // Le backend devrait retourner id_personnel soit directement, soit dans personnel.id_personnel
+                    const idPersonnel = selectedDemande.id_personnel 
+                        || selectedDemande.personnel?.id_personnel 
+                        || null;
+                    
+                    if (!idPersonnel) {
+                        console.warn("Impossible de créer la fiche : ID personnel manquant dans la demande");
+                        toast.warning("La demande a été approuvée mais l'envoi du PDF a échoué (ID personnel manquant).");
+                    } else {
+                        await createFicheDemande({
+                            id_demande: demandeId,
+                            id_personnel: idPersonnel,
+                            id_service: selectedDemande.id_service || undefined,
+                        }, pdfFile);
+                        toast.success("Fiche de demande créée et envoyée avec succès.");
+                    }
+                } catch (pdfError: any) {
+                    console.error("Erreur lors de la création du PDF:", pdfError);
+                    toast.error("La demande a été approuvée mais l'envoi du PDF a échoué.");
+                }
             } else if (modalType === "reject") {
                 if (!rejectReason.trim()) {
                     setActionError("Veuillez préciser le motif de refus.");

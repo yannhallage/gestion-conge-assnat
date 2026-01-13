@@ -310,3 +310,18 @@ export interface UpdatePersonnelDocumentDto {
     type_document?: TypeDocumentEnum;
     url_document?: string;
 }
+
+// -----------------------------
+// Fiche de Demande
+// -----------------------------
+export interface CreateFicheDemandeDto {
+    id_demande: string;
+    id_personnel: string;
+    id_service?: string;
+    url?: string; // URL du fichier uploadé (généré par le backend après upload)
+}
+
+export interface UpdateFicheDemandeDto {
+    id_service?: string;
+    url?: string; // URL du nouveau fichier uploadé (optionnel)
+}

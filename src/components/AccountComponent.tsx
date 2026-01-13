@@ -35,10 +35,20 @@ interface ProfileFormState {
     date_naissance: string;
 }
 
+interface PersonnelData {
+    poste?: string;
+    service?: {
+        id_service?: string;
+        nom_service?: string;
+        code_service?: string;
+    };
+}
+
 export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps) {
     const [loading, setLoading] = useState(false);
     const [userData, setUserData] = useState<StoredUser | null>(null);
     const [userError, setUserError] = useState<string | null>(null);
+    const [personnelData, setPersonnelData] = useState<PersonnelData | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -73,6 +83,27 @@ export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps)
         }
         loadUserFromStorage();
     }, [isOpen, loadUserFromStorage]);
+
+    useEffect(() => {
+        const loadPersonnelData = async () => {
+            if (!isOpen || !userData?.id) {
+                return;
+            }
+            try {
+                const data = await rhServiceFront.getPersonnelById(userData.id);
+                setPersonnelData({
+                    poste: data?.poste,
+                    service: data?.service,
+                });
+            } catch (error) {
+                console.error("Erreur lors du chargement des données du personnel :", error);
+            }
+        };
+
+        if (userData?.id) {
+            loadPersonnelData();
+        }
+    }, [isOpen, userData?.id]);
 
     useEffect(() => {
         const handleStorage = (event: StorageEvent) => {
@@ -169,10 +200,6 @@ export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps)
                                                 <dd className="mt-1 text-sm text-gray-800 font-medium">{userData.email_personnel || "—"}</dd>
                                             </div>
                                             <div>
-                                                <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Identifiant</dt>
-                                                <dd className="mt-1 text-sm text-gray-800 font-medium">{userData.id || "—"}</dd>
-                                            </div>
-                                            <div>
                                                 <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Rôle</dt>
                                                 <dd className="mt-2">
                                                     <span className="inline-flex items-center l px-3 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700">
@@ -182,7 +209,11 @@ export default function DrawerAccountComponent({ isOpen, onClose }: DrawerProps)
                                             </div>
                                             <div>
                                                 <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Service</dt>
-                                                <dd className="mt-1 text-sm text-gray-800 font-medium">{userData.id_service || "—"}</dd>
+                                                <dd className="mt-1 text-sm text-gray-800 font-medium">{personnelData?.service?.nom_service || userData.id_service || "—"}</dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Poste</dt>
+                                                <dd className="mt-1 text-sm text-gray-800 font-medium">{personnelData?.poste || "—"}</dd>
                                             </div>
                                         </dl>
                                     ) : (

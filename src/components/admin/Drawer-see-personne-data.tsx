@@ -473,7 +473,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
                     </h2>
                     <InfoRow label="Poste" value={currentPersonnel.poste} />
                     <InfoRow label="Type de contrat" value={currentPersonnel.type_contrat} />
-                    <InfoRow label="Date d'embauche" value={formatDate(currentPersonnel.date_embauche)} />
+                    {/* <InfoRow label="Date d'embauche" value={formatDate(currentPersonnel.date_embauche)} />
                     <InfoRow label="Date de fin de contrat" value={formatDate(currentPersonnel.date_fin_contrat)} />
                     {!isAdmin && (
                       <>
@@ -495,10 +495,10 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
                       <>
                         <InfoRow label="Niveau hiérarchique" value={currentPersonnel.niveau_hierarchique} />
                       </>
-                    )}
+                    )} */}
                   </section>
 
-                  {!isAdmin && (
+                  {/* {!isAdmin && (
                     <>
                       <section className="space-y-3">
                         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
@@ -563,7 +563,7 @@ export default function DrawerSeePersonneData({ isOpen, onClose, personnel, onPe
                         )}
                       </section>
                     </>
-                  )}
+                  )} */}
                 </>
               )}
             </div>
